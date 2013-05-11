@@ -7,6 +7,18 @@
 #include <linux/ip.h>
 #include <linux/tcp.h>
 
+#define PROFINET_PORT 102
+
+void pcap_parse_profinet_request(u_char *user, const u_char *bytes, const int len)
+{
+
+}
+
+void pcap_parse_profinet_response(u_char *user, const u_char *bytes, const int len)
+{
+
+}
+
 void pcap_parse_tcp(u_char *user, const u_char *bytes, const int len)
 {
     assert(! user);
@@ -16,7 +28,17 @@ void pcap_parse_tcp(u_char *user, const u_char *bytes, const int len)
 
     struct tcphdr *tcph = (struct tcphdr*)bytes;
     uint16_t dst_port = ntohs(tcph->dest);
-    printf("Destination port = %d\n", dst_port);
+    uint16_t src_port = ntohs(tcph->source);
+
+    if (dst_port == PROFINET_PORT)
+        pcap_parse_profinet_request(user, bytes + sizeof(struct tcphdr),
+                len - sizeof(struct tcphdr));
+    else if (src_port == PROFINET_PORT)
+        pcap_parse_profinet_response(user, bytes + sizeof(struct tcphdr),
+                len - sizeof(struct tcphdr));
+    else
+        printf("Unknown connection at dest port = %d, src_port = %d\n",
+                dst_port, src_port);
 }
 
 void pcap_parse_ip4(u_char *user, const u_char *bytes, const int len)
