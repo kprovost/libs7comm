@@ -16,6 +16,9 @@ void pcap_callback(u_char *user, const struct pcap_pkthdr *h,
 {
     assert(! user);
 
+    if (h->caplen < sizeof(struct ethhdr))
+        return;
+
     struct ethhdr *eh = (struct ethhdr*)bytes;
     uint16_t eth_proto = ntohs(eh->h_proto);
     switch (eth_proto)
