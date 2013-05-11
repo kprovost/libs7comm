@@ -1,12 +1,32 @@
 #include <assert.h>
-#include <pcap/pcap.h>
+#include <stdint.h>
 #include <stdio.h>
+#include <arpa/inet.h>
+#include <pcap/pcap.h>
+#include <linux/if_ether.h>
+
+void pcap_parse_ip4(u_char *user, const u_char *bytes, const int len)
+{
+    assert(! user);
+    printf("IP packet (len %d)\n", len);
+}
 
 void pcap_callback(u_char *user, const struct pcap_pkthdr *h,
         const u_char *bytes)
 {
     assert(! user);
-    printf("Packet!\n");
+
+    struct ethhdr *eh = (struct ethhdr*)bytes;
+    uint16_t eth_proto = ntohs(eh->h_proto);
+    switch (eth_proto)
+    {
+        case ETH_P_IP:
+            pcap_parse_ip4(user, bytes + sizeof(struct ethhdr), h->caplen - sizeof(struct ethhdr));
+            break;
+        default:
+            printf("Unknown ethernet protocol = %02x\n", eth_proto);
+            break;
+    }
 }
 
 int main(int argc, char** argv)
