@@ -4,11 +4,43 @@
 #include <arpa/inet.h>
 #include <pcap/pcap.h>
 #include <linux/if_ether.h>
+#include <linux/ip.h>
+#include <linux/tcp.h>
+
+void pcap_parse_tcp(u_char *user, const u_char *bytes, const int len)
+{
+    assert(! user);
+
+    if (len < sizeof(struct tcphdr))
+        return;
+
+    struct tcphdr *tcph = (struct tcphdr*)bytes;
+    uint16_t dst_port = ntohs(tcph->dest);
+    printf("Destination port = %d\n", dst_port);
+}
 
 void pcap_parse_ip4(u_char *user, const u_char *bytes, const int len)
 {
     assert(! user);
-    printf("IP packet (len %d)\n", len);
+
+    if (len < sizeof(struct iphdr))
+        return;
+
+    struct iphdr *iph = (struct iphdr*)bytes;
+    assert(iph->version == 4);
+
+    uint8_t ip_proto = iph->protocol;
+    uint8_t header_len = iph->ihl * 4;
+
+    switch (ip_proto)
+    {
+        case IPPROTO_TCP:
+            pcap_parse_tcp(user, bytes + header_len, len - header_len);
+            break;
+        case IPPROTO_UDP:
+        default:
+            printf("Unknown IP protocol %d\n", ip_proto);
+    }
 }
 
 void pcap_callback(u_char *user, const struct pcap_pkthdr *h,
