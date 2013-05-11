@@ -26,6 +26,9 @@ void pcap_callback(u_char *user, const struct pcap_pkthdr *h,
         case ETH_P_IP:
             pcap_parse_ip4(user, bytes + sizeof(struct ethhdr), h->caplen - sizeof(struct ethhdr));
             break;
+        case ETH_P_ARP:
+            // We don't care about arp.
+            break;
         default:
             printf("Unknown ethernet protocol = %02x\n", eth_proto);
             break;
