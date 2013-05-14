@@ -1,4 +1,5 @@
 #include <assert.h>
+#include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <arpa/inet.h>
@@ -8,6 +9,11 @@
 #include <linux/tcp.h>
 
 #define PROFINET_PORT 102
+
+#define PROFINET_ISO_PROTOCOL 0x03
+
+#define PROFINET_ISO_FUNCTION_PDU_TRANSPORT 0xf0
+#define PROFINET_ISO_FUNCTION_CONNECT       0xe0
 
 struct profinet_iso_header
 {
@@ -37,8 +43,21 @@ struct profinet_request
 void dump_profinet_iso_header(const struct profinet_iso_header *h)
 {
     printf("Protocol = 0x%02x\n", h->prot);
+    assert(h->prot == PROFINET_ISO_PROTOCOL);
+
     printf("Length = %d\n", h->len);
-    printf("Function = 0x%02x\n", h->func);
+    switch (h->func)
+    {
+        case PROFINET_ISO_FUNCTION_PDU_TRANSPORT:
+            printf("Function = PDU Transport\n");
+            break;
+        case PROFINET_ISO_FUNCTION_CONNECT:
+            printf("Function = Connect to rack\n");
+            break;
+        default:
+            printf("Protocol = UNKNOWN (0x%02x)\n", h->func);
+            assert(false);
+    }
 }
 
 void dump_profinet_request(const struct profinet_request *r)
