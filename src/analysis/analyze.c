@@ -9,9 +9,55 @@
 
 #define PROFINET_PORT 102
 
+struct profinet_iso_header
+{
+    uint8_t prot;
+    uint8_t ch1;
+    uint8_t ch2;
+    uint8_t len;
+    uint8_t xxxx1;
+    uint8_t func;
+    uint8_t xxxx2;
+};
+
+struct profinet_request
+{
+    struct profinet_iso_header iso;
+
+    uint16_t prefix;
+    uint8_t unknown1;
+    uint8_t read_size; /* 1: single bit, 2: byte, 4: word */ // -> Looks like a sequence number or something...
+    uint16_t read_length;
+    uint16_t db_num;
+    uint8_t area_code;
+    uint8_t start_addr;
+    uint16_t start_addr_2;
+};
+
+void dump_profinet_iso_header(const struct profinet_iso_header *h)
+{
+    printf("Protocol = 0x%02x\n", h->prot);
+    printf("Length = %d\n", h->len);
+    printf("Function = 0x%02x\n", h->func);
+}
+
+void dump_profinet_request(const struct profinet_request *r)
+{
+    dump_profinet_iso_header(&r->iso);
+    printf("Prefix = 0x%04x\n", r->prefix);
+    printf("Read size = %d\n", r->read_size);
+    printf("Length = %d\n", r->read_length);
+
+    printf("========================================\n");
+}
+
 void pcap_parse_profinet_request(u_char *user, const u_char *bytes, const int len)
 {
+    if (len < sizeof(struct profinet_request))
+        return;
 
+    struct profinet_request *r = (struct profinet_request*)bytes;
+    dump_profinet_request(r);
 }
 
 void pcap_parse_profinet_response(u_char *user, const u_char *bytes, const int len)
