@@ -1,0 +1,17 @@
+libprofinet
+===========
+
+A simplistic (attempt at an) implementation of the Profinet protocol suite,
+used to communicate with Siemens PLCs.
+
+This work is inspired by the existing
+http://libnodave.sourceforge.net/[libnodave] code, which is a little hard to
+follow.
+
+Objectives
+----------
+To be able to read and write variables from/to a Siemens S7.
+
+Target audience
+---------------
+Me. Just me. Don't use this, it'll turn your hair purple.
