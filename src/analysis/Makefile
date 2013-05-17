@@ -10,3 +10,7 @@ analyze: analyze.o
 %.o: %.c
 	$(CC) $(CFLAGS) -c $< -o $@
 
+.PHONY:
+clean:
+	rm -Rf analyze analyze.o
+
