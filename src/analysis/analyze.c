@@ -26,13 +26,22 @@ struct profinet_iso_header
     uint8_t xxxx2;
 };
 
+struct profinet_ibh_header
+{
+    uint16_t channel;
+    uint8_t len;
+    uint8_t seq;
+    uint16_t flags;
+};
+
 struct profinet_request
 {
     struct profinet_iso_header iso;
+    struct profinet_ibh_header ibh;
 
     uint16_t prefix;
     uint8_t unknown1;
-    uint8_t read_size; /* 1: single bit, 2: byte, 4: word */ // -> Looks like a sequence number or something...
+    uint8_t read_size;
     uint16_t read_length;
     uint16_t db_num;
     uint8_t area_code;
@@ -40,12 +49,13 @@ struct profinet_request
     uint16_t start_addr_2;
 };
 
-void dump_profinet_iso_header(const struct profinet_iso_header *h)
+void dump_profinet_iso_header(const struct profinet_iso_header *h, const int len)
 {
     printf("Protocol = 0x%02x\n", h->prot);
     assert(h->prot == PROFINET_ISO_PROTOCOL);
 
-    printf("Length = %d\n", h->len);
+    printf("Length = %d (packet length %d)\n", h->len, len);
+    //assert(h->len == len);
     switch (h->func)
     {
         case PROFINET_ISO_FUNCTION_PDU_TRANSPORT:
@@ -60,28 +70,53 @@ void dump_profinet_iso_header(const struct profinet_iso_header *h)
     }
 }
 
-void dump_profinet_request(const struct profinet_request *r)
+void dump_profinet_ibh_header(const struct profinet_ibh_header *ibh)
 {
-    dump_profinet_iso_header(&r->iso);
+    printf("IBH channel: 0x%04x\n", ibh->channel);
+    printf("IBH len: %d\n", ibh->len);
+    printf("IBH seq: %d\n", ibh->seq);
+    printf("IBH flags: 0x%04x\n", ibh->flags);
+}
+
+void dump_profinet_request(const struct profinet_request *r, const int len)
+{
+    dump_profinet_iso_header(&r->iso, len);
+    dump_profinet_ibh_header(&r->ibh);
+
     printf("Prefix = 0x%04x\n", r->prefix);
     printf("Read size = %d\n", r->read_size);
     printf("Length = %d\n", r->read_length);
 
-    printf("========================================\n");
+    assert(r->ibh.channel == 7);
+    assert(r->iso.len == len);
 }
 
 void pcap_parse_profinet_request(u_char *user, const u_char *bytes, const int len)
 {
+    printf("===== REQUEST ==========================\n");
+
     if (len < sizeof(struct profinet_request))
+    {
+        printf("Short packet!\n");
         return;
+    }
 
     struct profinet_request *r = (struct profinet_request*)bytes;
-    dump_profinet_request(r);
+    dump_profinet_request(r, len);
 }
 
 void pcap_parse_profinet_response(u_char *user, const u_char *bytes, const int len)
 {
+    printf("===== RESPONSE =========================\n");
 
+    if (len < sizeof(struct profinet_request))
+    {
+        printf("Short packet!\n");
+        return;
+    }
+
+    struct profinet_request *r = (struct profinet_request*)bytes;
+    dump_profinet_request(r, len);
 }
 
 void pcap_parse_tcp(u_char *user, const u_char *bytes, const int len)
