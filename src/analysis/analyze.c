@@ -31,7 +31,8 @@ struct profinet_ibh_header
     uint16_t channel;
     uint8_t len;
     uint8_t seq;
-    uint16_t flags;
+    uint16_t sflags;
+    uint16_t rflags;
 };
 
 struct profinet_request
@@ -75,7 +76,8 @@ void dump_profinet_ibh_header(const struct profinet_ibh_header *ibh)
     printf("IBH channel: 0x%04x\n", ibh->channel);
     printf("IBH len: %d\n", ibh->len);
     printf("IBH seq: %d\n", ibh->seq);
-    printf("IBH flags: 0x%04x\n", ibh->flags);
+    printf("IBH sflags: 0x%04x\n", ibh->sflags);
+    printf("IBH rflags: 0x%04x\n", ibh->rflags);
 }
 
 void dump_profinet_request(const struct profinet_request *r, const int len)
