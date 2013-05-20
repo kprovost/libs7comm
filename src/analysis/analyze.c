@@ -62,14 +62,14 @@ struct profinet_pdu_header
 
 struct profinet_request
 {
-    uint8_t function; /* param[0] */
+    uint8_t function;
     uint8_t unknown3;
     uint16_t prefix;
     uint8_t unknown4;
     uint8_t read_size;
-    uint16_t read_length; /* bytes */
-    uint16_t db_num; /* DB number */
-    uint8_t area_code; /* Area code */
+    uint16_t bytes;
+    uint16_t db_num;
+    uint8_t area_code;
     uint8_t start_addr; /* start */
     uint16_t start_addr_2; /* start, part 2, is 3 bytes in total */
 };
@@ -80,7 +80,6 @@ void dump_profinet_iso_header(const struct profinet_iso_header *h, const int len
     assert(h->prot == PROFINET_ISO_PROTOCOL);
 
     printf("Length = %d (packet length %d)\n", h->len, len);
-    //assert(h->len == len);
     switch (h->func)
     {
         case PROFINET_ISO_FUNCTION_PDU_TRANSPORT:
@@ -99,8 +98,8 @@ void dump_profinet_ibh_header(const struct profinet_ibh_header *ibh)
     printf("IBH channel: 0x%04x\n", ibh->channel);
     printf("IBH len: %d\n", ibh->len);
     printf("IBH seq: %d\n", ibh->seq);
-    printf("IBH sflags: 0x%04x\n", ibh->sflags);
-    printf("IBH rflags: 0x%04x\n", ibh->rflags);
+    printf("IBH sflags: 0x%04x\n", ntohs(ibh->sflags));
+    printf("IBH rflags: 0x%04x\n", ntohs(ibh->rflags));
 }
 
 void dump_profinet_pdu_header(const struct profinet_pdu_header *pdu)
@@ -155,13 +154,14 @@ void dump_profinet_request(const struct profinet_request *r)
 
     printf("Function = 0x%02x\n", r->function);
 
-    printf("Prefix = 0x%04x\n", r->prefix);
+    printf("Prefix = 0x%04x\n", ntohs(r->prefix));
     printf("Read size = 0x%02x\n", r->read_size);
-    printf("read length = 0x%02x\n", r->read_length);
-    printf("db_num = 0x%04x\n", r->db_num);
+    printf("bytes = 0x%02x\n", r->bytes);
+    printf("db_num = 0x%04x\n", ntohs(r->db_num));
     printf("area_code = 0x%02x\n", r->area_code);
-    printf("start_addr = 0x%02x\n", r->start_addr);
-    printf("start_addr_2 = 0x%04x\n", r->start_addr_2);
+
+    uint32_t start_addr = (r->start_addr << 24) | ntohs(r->start_addr_2);
+    printf("start_addr = 0x%06x\n", start_addr);
 }
 
 void pcap_parse_profinet_request(u_char *user, const u_char *bytes, const int len)
