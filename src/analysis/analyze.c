@@ -49,19 +49,29 @@ struct profinet_ibh_header
     uint16_t rflags;
 };
 
+struct profinet_pdu_header
+{
+    uint8_t unknown;
+    uint8_t version;
+    uint16_t unknown2;
+    uint16_t unknown3;
+    uint16_t plen;
+    uint16_t dlen;
+    uint16_t res;
+};
+
 struct profinet_request
 {
-    struct profinet_iso_header iso;
-    struct profinet_ibh_header ibh;
-
+    uint8_t function; /* param[0] */
+    uint8_t unknown3;
     uint16_t prefix;
-    uint8_t unknown1;
+    uint8_t unknown4;
     uint8_t read_size;
-    uint16_t read_length;
-    uint16_t db_num;
-    uint8_t area_code;
-    uint8_t start_addr;
-    uint16_t start_addr_2;
+    uint16_t read_length; /* bytes */
+    uint16_t db_num; /* DB number */
+    uint8_t area_code; /* Area code */
+    uint8_t start_addr; /* start */
+    uint16_t start_addr_2; /* start, part 2, is 3 bytes in total */
 };
 
 void dump_profinet_iso_header(const struct profinet_iso_header *h, const int len)
@@ -81,7 +91,6 @@ void dump_profinet_iso_header(const struct profinet_iso_header *h, const int len
             break;
         default:
             printf("Protocol = UNKNOWN (0x%02x)\n", h->func);
-            assert(false);
     }
 }
 
@@ -94,33 +103,75 @@ void dump_profinet_ibh_header(const struct profinet_ibh_header *ibh)
     printf("IBH rflags: 0x%04x\n", ibh->rflags);
 }
 
-void dump_profinet_request(const struct profinet_request *r, const int len)
+void dump_profinet_pdu_header(const struct profinet_pdu_header *pdu)
 {
-    dump_profinet_iso_header(&r->iso, len);
-    dump_profinet_ibh_header(&r->ibh);
+    printf("PDU unknown: 0x%02x\n", pdu->unknown);
+    printf("PDU version: %d\n", pdu->version);
+    printf("PDU unknown2: 0x%04x\n", ntohs(pdu->unknown2));
+    printf("PDU unknown3: 0x%04x\n", ntohs(pdu->unknown3));
+    printf("PDU plen: 0x%02x\n", ntohs(pdu->plen));
+    printf("PDU dlen: 0x%02x\n", ntohs(pdu->dlen));
+}
+
+void dump_profinet_request(const struct profinet_request *r)
+{
+    printf("Function = 0x%02x\n", r->function);
 
     printf("Prefix = 0x%04x\n", r->prefix);
-    printf("Read size = %d\n", r->read_size);
-    printf("Length = %d\n", r->read_length);
-
-    assert(r->ibh.channel == 7);
-    assert(r->iso.len == len);
+    printf("Read size = 0x%02x\n", r->read_size);
+    printf("read length = 0x%02x\n", r->read_length);
+    printf("db_num = 0x%04x\n", r->db_num);
+    printf("area_code = 0x%02x\n", r->area_code);
+    printf("start_addr = 0x%02x\n", r->start_addr);
+    printf("start_addr_2 = 0x%04x\n", r->start_addr_2);
 }
 
 void pcap_parse_profinet_request(u_char *user, const u_char *bytes, const int len)
 {
-    printf("===== REQUEST ==========================\n");
+    if (len < sizeof(struct profinet_request))
+    {
+        printf("Run request!\n");
+        return;
+    }
 
     struct profinet_request *r = (struct profinet_request*)bytes;
-    dump_profinet_request(r, len);
+    dump_profinet_request(r);
 }
 
-void pcap_parse_profinet_response(u_char *user, const u_char *bytes, const int len)
+void pcap_parse_profinet_pdu(u_char *user, const u_char *bytes, const int len)
 {
-    printf("===== RESPONSE =========================\n");
+    if (len < sizeof(struct profinet_pdu_header))
+    {
+        printf("Runt packet!\n");
+        return;
+    }
 
-    struct profinet_request *r = (struct profinet_request*)bytes;
-    dump_profinet_request(r, len);
+    struct profinet_pdu_header *pdu = (struct profinet_pdu_header*)bytes;
+    dump_profinet_pdu_header(pdu);
+
+    int header_len = sizeof(struct profinet_pdu_header);
+    if (pdu->version != 2 && pdu->version != 3)
+    {
+        // Only version 2 and 3 are 12 bytes. The others are only 10 bytes.
+        header_len = sizeof(struct profinet_pdu_header) - 2;
+    }
+
+    pcap_parse_profinet_request(user, bytes + header_len, len - header_len);
+}
+
+void pcap_parse_profinet(u_char *user, const u_char *bytes, const int len)
+{
+    struct profinet_iso_header *iso = (struct profinet_iso_header*)bytes;
+    if (iso->prot != PROFINET_ISO_PROTOCOL)
+        return;
+
+    dump_profinet_iso_header(iso, len);
+
+    if (iso->func == PROFINET_ISO_FUNCTION_PDU_TRANSPORT)
+    {
+        pcap_parse_profinet_pdu(user, bytes + sizeof(struct profinet_iso_header),
+                len - sizeof(struct profinet_iso_header));
+    }
 }
 
 void pcap_parse_tcp(u_char *user, const u_char *bytes, const int len)
@@ -141,11 +192,17 @@ void pcap_parse_tcp(u_char *user, const u_char *bytes, const int len)
         return;
 
     if (dst_port == PROFINET_PORT)
-        pcap_parse_profinet_request(user, bytes + hdr_len,
+    {
+        printf("===== REQUEST ==========================\n");
+        pcap_parse_profinet(user, bytes + hdr_len,
                 payload_len);
+    }
     else if (src_port == PROFINET_PORT)
-        pcap_parse_profinet_response(user, bytes + hdr_len,
+    {
+        printf("===== RESPONSE =========================\n");
+        pcap_parse_profinet(user, bytes + hdr_len,
                 payload_len);
+    }
     else
         printf("Unknown connection at dest port = %d, src_port = %d\n",
                 dst_port, src_port);
