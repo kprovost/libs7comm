@@ -131,13 +131,15 @@ void pcap_parse_tcp(u_char *user, const u_char *bytes, const int len)
     struct tcphdr *tcph = (struct tcphdr*)bytes;
     uint16_t dst_port = ntohs(tcph->dest);
     uint16_t src_port = ntohs(tcph->source);
+    int hdr_len = tcph->doff * 4;
+    assert(hdr_len >= sizeof(struct tcphdr));
 
     if (dst_port == PROFINET_PORT)
-        pcap_parse_profinet_request(user, bytes + sizeof(struct tcphdr),
-                len - sizeof(struct tcphdr));
+        pcap_parse_profinet_request(user, bytes + hdr_len,
+                len - hdr_len);
     else if (src_port == PROFINET_PORT)
-        pcap_parse_profinet_response(user, bytes + sizeof(struct tcphdr),
-                len - sizeof(struct tcphdr));
+        pcap_parse_profinet_response(user, bytes + hdr_len,
+                len - hdr_len);
     else
         printf("Unknown connection at dest port = %d, src_port = %d\n",
                 dst_port, src_port);
