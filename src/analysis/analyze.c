@@ -130,7 +130,7 @@ void pcap_parse_profinet_request(u_char *user, const u_char *bytes, const int le
 {
     if (len < sizeof(struct profinet_request))
     {
-        printf("Run request!\n");
+        printf("Runt request!\n");
         return;
     }
 
