@@ -111,12 +111,6 @@ void pcap_parse_profinet_request(u_char *user, const u_char *bytes, const int le
 {
     printf("===== REQUEST ==========================\n");
 
-    if (len < sizeof(struct profinet_request))
-    {
-        printf("Short packet!\n");
-        return;
-    }
-
     struct profinet_request *r = (struct profinet_request*)bytes;
     dump_profinet_request(r, len);
 }
@@ -124,12 +118,6 @@ void pcap_parse_profinet_request(u_char *user, const u_char *bytes, const int le
 void pcap_parse_profinet_response(u_char *user, const u_char *bytes, const int len)
 {
     printf("===== RESPONSE =========================\n");
-
-    if (len < sizeof(struct profinet_request))
-    {
-        printf("Short packet!\n");
-        return;
-    }
 
     struct profinet_request *r = (struct profinet_request*)bytes;
     dump_profinet_request(r, len);
@@ -148,12 +136,16 @@ void pcap_parse_tcp(u_char *user, const u_char *bytes, const int len)
     int hdr_len = tcph->doff * 4;
     assert(hdr_len >= sizeof(struct tcphdr));
 
+    int payload_len = len - hdr_len;
+    if (payload_len < sizeof(struct profinet_request))
+        return;
+
     if (dst_port == PROFINET_PORT)
         pcap_parse_profinet_request(user, bytes + hdr_len,
-                len - hdr_len);
+                payload_len);
     else if (src_port == PROFINET_PORT)
         pcap_parse_profinet_response(user, bytes + hdr_len,
-                len - hdr_len);
+                payload_len);
     else
         printf("Unknown connection at dest port = %d, src_port = %d\n",
                 dst_port, src_port);
