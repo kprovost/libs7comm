@@ -15,6 +15,20 @@
 #define PROFINET_ISO_FUNCTION_PDU_TRANSPORT 0xf0
 #define PROFINET_ISO_FUNCTION_CONNECT       0xe0
 
+enum profinet_function_t
+{
+    profinet_function_open_connection  = 0xf0,
+    profinet_function_read             = 0x04,
+    profinet_function_write            = 0x05,
+    profinet_function_download_request = 0x1a,
+    profinet_function_download_block   = 0x1b,
+    profinet_function_download_ended   = 0x1c,
+    profinet_function_upload_start     = 0x1d,
+    profinet_function_upload           = 0x1e,
+    profinet_function_upload_end       = 0x1f,
+    profinet_function_insert_block     = 0x28,
+};
+
 struct profinet_iso_header
 {
     uint8_t prot;
