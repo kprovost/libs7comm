@@ -115,6 +115,44 @@ void dump_profinet_pdu_header(const struct profinet_pdu_header *pdu)
 
 void dump_profinet_request(const struct profinet_request *r)
 {
+    printf("Function: ");
+    switch (r->function)
+    {
+        case profinet_function_open_connection:
+            printf("open connection");
+            break;
+        case profinet_function_read:
+            printf("read");
+            break;
+        case profinet_function_write:
+            printf("write");
+            break;
+        case profinet_function_download_request:
+            printf("download request");
+            break;
+        case profinet_function_download_block:
+            printf("download block");
+            break;
+        case profinet_function_download_ended:
+            printf("download ended");
+            break;
+        case profinet_function_upload_start:
+            printf("upload start");
+            break;
+        case profinet_function_upload:
+            printf("upload");
+            break;
+        case profinet_function_upload_end:
+            printf("upload end");
+            break;
+        case profinet_function_insert_block:
+            printf("insert block");
+            break;
+        default:
+            printf("unknown function 0x%02x", r->function);
+    }
+    printf("\n");
+
     printf("Function = 0x%02x\n", r->function);
 
     printf("Prefix = 0x%04x\n", r->prefix);
