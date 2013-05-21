@@ -38,7 +38,7 @@ struct profinet_iso_header
     uint8_t xxxx1;
     uint8_t func;
     uint8_t xxxx2;
-};
+} __attribute__((packed));
 
 struct profinet_ibh_header
 {
@@ -47,7 +47,7 @@ struct profinet_ibh_header
     uint8_t seq;
     uint16_t sflags;
     uint16_t rflags;
-};
+} __attribute__((packed));
 
 struct profinet_pdu_header
 {
@@ -58,7 +58,7 @@ struct profinet_pdu_header
     uint16_t plen;
     uint16_t dlen;
     uint16_t res;
-};
+} __attribute__((packed));
 
 struct profinet_request
 {
@@ -72,7 +72,7 @@ struct profinet_request
     uint8_t area_code;
     uint8_t start_addr; /* start */
     uint16_t start_addr_2; /* start, part 2, is 3 bytes in total */
-};
+} __attribute__((packed));
 
 void dump_profinet_iso_header(const struct profinet_iso_header *h, const int len)
 {
