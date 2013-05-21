@@ -106,6 +106,8 @@ void dump_profinet_pdu_header(const struct profinet_pdu_header *pdu)
 {
     printf("PDU unknown: 0x%02x\n", pdu->unknown);
     printf("PDU version: %d\n", pdu->version);
+    if (pdu->version == 1 || pdu->version == 3)
+        printf("PDU result: 0x%04x\n", ntohs(pdu->res));
     printf("PDU unknown2: 0x%04x\n", ntohs(pdu->unknown2));
     printf("PDU unknown3: 0x%04x\n", ntohs(pdu->unknown3));
     printf("PDU plen: 0x%02x\n", ntohs(pdu->plen));
