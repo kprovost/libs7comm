@@ -1,7 +1,7 @@
 
 all: analyze
 
-CFLAGS = -g -Wall -Werror
+CFLAGS = -g -Wall -Werror -I../include
 LDFLAGS = -lpcap
 
 analyze: analyze.o
