@@ -83,7 +83,7 @@ profinet_err_t profinet_read_word(struct profinet_dev *dev, int db, int number, 
     if (! PROFINET_OK(err))
         return err;
 
-    struct profinet_request *req = (struct profinet_request*)p->payload;
+    struct profinet_request *req = (struct profinet_request*)ppkt_payload(p);
     req->function = profinet_function_read;
     req->prefix = htons(0x120a); // TODO
     req->read_size = 2;

@@ -13,7 +13,7 @@ profinet_err_t profinet_iso_send(struct profinet_dev *dev, struct ppkt_t **p)
     if (! isohdr)
         return PROFINET_ERR_NO_MEM;
 
-    struct profinet_iso_header *hdr = (struct profinet_iso_header*)isohdr->payload;
+    struct profinet_iso_header *hdr = (struct profinet_iso_header*)ppkt_payload(isohdr);
 
     hdr->prot = PROFINET_ISO_PROTOCOL;
     hdr->ch1 = 0;

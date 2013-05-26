@@ -35,6 +35,11 @@ struct ppkt_t *ppkt_prefix_header(struct ppkt_t *hdr, struct ppkt_t *p)
     return p;
 }
 
+uint8_t* ppkt_payload(struct ppkt_t *p)
+{
+    return p->payload + p->offset;
+}
+
 unsigned int ppkt_length(struct ppkt_t *p)
 {
     assert(p);
