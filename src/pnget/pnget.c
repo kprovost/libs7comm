@@ -23,6 +23,10 @@ int main(int argc, char **argv)
 
     printf("Temperature: %f\n", ((int16_t)temp) / 10.0);
 
+    uint16_t setpoint;
+    err = profinet_read_word(dev, 10, 6, &setpoint);
+    printf("Temperature setpoint: %f\n", ((int16_t)setpoint) / 10.0);
+
 exit:
     profinet_disconnect(dev);
 
