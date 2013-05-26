@@ -8,6 +8,8 @@ struct profinet_dev;
 typedef enum
 {
     PROFINET_ERR_NONE,
+    PROFINET_ERR_NO_MEM,
+    PROFINET_ERR_SEND_FAILED,
     PROFINET_ERR_UNKNOWN
 } profinet_err_t;
 #define PROFINET_OK(x) (x == PROFINET_ERR_NONE)

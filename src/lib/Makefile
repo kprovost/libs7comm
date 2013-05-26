@@ -1,10 +1,16 @@
 all: libprofinet.so
 
+OBJS =\
+	  profinet.o \
+	  ppkt.o \
+	  pdu.o \
+	  iso.o
+
 CFLAGS = -g -Wall -Werror -I../include -fPIC
 LDFLAGS = -shared
 
-libprofinet.so: profinet.o
-	$(CC) $(LDFLAGS) -o $@ $<
+libprofinet.so: $(OBJS)
+	$(CC) $(LDFLAGS) -o $@ $^
 
 %.o: %.c
 	$(CC) $(CFLAGS) -c $< -o $@

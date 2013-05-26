@@ -90,4 +90,9 @@ struct profinet_request
     uint16_t start_addr_2; /* start, part 2, is 3 bytes in total */
 } __attribute__((packed));
 
+struct profinet_dev
+{
+    int fd;
+};
+
 #endif
