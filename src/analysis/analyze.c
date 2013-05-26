@@ -8,7 +8,7 @@
 #include <linux/ip.h>
 #include <linux/tcp.h>
 
-#include <profinet.h>
+#include <profinet_types.h>
 #include <profinet_debug.h>
 
 void dump_profinet_iso_header(const struct profinet_iso_header *h, const int len)
