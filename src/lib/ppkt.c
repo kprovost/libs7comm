@@ -17,7 +17,9 @@ struct ppkt_t *ppkt_create(unsigned int size)
 
 void ppkt_free(struct ppkt_t *p)
 {
-    assert(p);
+    if (! p)
+        return;
+
     assert(p->payload);
 
     if (p->next)
