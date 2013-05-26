@@ -19,7 +19,7 @@ profinet_err_t profinet_pdu_send(struct profinet_dev *dev, struct ppkt_t **p)
     hdr->version = 3;
     hdr->unknown2 = 0;
     hdr->unknown3 = 0;
-    hdr->plen = htons((*p)->size);
+    hdr->plen = htons(ppkt_length(*p));
     hdr->dlen = 0;
 
     *p = ppkt_prefix_header(pduhdr, *p);

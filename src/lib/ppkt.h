@@ -4,13 +4,7 @@
 #include <stdint.h>
 #include "profinet.h"
 
-struct ppkt_t
-{
-    uint8_t       *payload;
-    unsigned int   size;
-    unsigned int   offset;
-    struct ppkt_t *next;
-};
+struct ppkt_t;
 
 struct ppkt_t *ppkt_create(unsigned int size);
 void ppkt_free(struct ppkt_t *p);

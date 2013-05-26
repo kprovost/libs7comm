@@ -4,6 +4,14 @@
 #include <unistd.h>
 #include <assert.h>
 
+struct ppkt_t
+{
+    uint8_t       *payload;
+    unsigned int   size;
+    unsigned int   offset;
+    struct ppkt_t *next;
+};
+
 struct ppkt_t *ppkt_create(unsigned int size)
 {
     struct ppkt_t *p = malloc(sizeof(struct ppkt_t));
