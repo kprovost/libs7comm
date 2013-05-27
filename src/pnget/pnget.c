@@ -13,7 +13,7 @@ int main(int argc, char **argv)
         return 1;
     }
 
-    uint16_t temp;
+    uint16_t temp = 0;
     profinet_err_t err = profinet_read_word(dev, 10, 4, &temp);
     if (! PROFINET_OK(err))
     {
@@ -23,7 +23,7 @@ int main(int argc, char **argv)
 
     printf("Temperature: %f\n", ((int16_t)temp) / 10.0);
 
-    uint16_t setpoint;
+    uint16_t setpoint = 0;
     err = profinet_read_word(dev, 10, 6, &setpoint);
     printf("Temperature setpoint: %f\n", ((int16_t)setpoint) / 10.0);
 
