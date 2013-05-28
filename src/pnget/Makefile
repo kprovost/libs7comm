@@ -1,6 +1,6 @@
 all: pnget
 
-CFLAGS = -g -Wall -Werror -I../include
+CFLAGS = -g -Wall -Werror -I../include -std=c99
 LDFLAGS = -L../lib -lprofinet
 
 pnget: pnget.o

@@ -24,7 +24,7 @@ struct profinet_dev* profinet_connect(const char *plc_addr)
     if (! hostent)
         return NULL;
 
-    if (! hostent->h_addr)
+    if (! hostent->h_addr_list[0])
         return NULL;
 
     dev = malloc(sizeof(struct profinet_dev));
@@ -38,7 +38,7 @@ struct profinet_dev* profinet_connect(const char *plc_addr)
     struct sockaddr_in in;
     in.sin_family = AF_INET;
     in.sin_port = htons(PROFINET_PORT);
-    memcpy(&in.sin_addr, hostent->h_addr, sizeof(struct in_addr));
+    memcpy(&in.sin_addr, hostent->h_addr_list, sizeof(struct in_addr));
 
     ret = connect(dev->fd, (struct sockaddr*)&in,
             sizeof(struct sockaddr_in));

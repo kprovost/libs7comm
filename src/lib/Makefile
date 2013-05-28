@@ -6,7 +6,7 @@ OBJS =\
 	  pdu.o \
 	  iso.o
 
-CFLAGS = -g -Wall -Werror -I../include -fPIC
+CFLAGS = -g -Wall -Werror -I../include -fPIC -std=c99
 LDFLAGS = -shared
 
 libprofinet.so: $(OBJS)
