@@ -2,17 +2,18 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
+#include <sys/uio.h>
 #include <assert.h>
 
 struct ppkt_t
 {
     uint8_t       *payload;
-    unsigned int   size;
-    unsigned int   offset;
+    size_t         size;
+    size_t         offset;
     struct ppkt_t *next;
 };
 
-struct ppkt_t *ppkt_create(unsigned int size)
+struct ppkt_t *ppkt_create(size_t size)
 {
     struct ppkt_t *p = malloc(sizeof(struct ppkt_t));
     memset(p, 0, sizeof(struct ppkt_t));
@@ -48,10 +49,10 @@ uint8_t* ppkt_payload(struct ppkt_t *p)
     return p->payload + p->offset;
 }
 
-unsigned int ppkt_length(struct ppkt_t *p)
+size_t ppkt_length(struct ppkt_t *p)
 {
     assert(p);
-    unsigned int length = 0;
+    size_t length = 0;
 
     while (p)
     {
