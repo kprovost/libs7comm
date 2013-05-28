@@ -25,6 +25,11 @@ int main(int argc, char **argv)
 
     uint16_t setpoint = 0;
     err = profinet_read_word(dev, 10, 6, &setpoint);
+    if (! PROFINET_OK(err))
+    {
+        printf("Failed to read temperature\n");
+        goto exit;
+    }
     printf("Temperature setpoint: %f\n", ((int16_t)setpoint) / 10.0);
 
 exit:
