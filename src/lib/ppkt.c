@@ -63,6 +63,20 @@ size_t ppkt_length(struct ppkt_t *p)
     return length;
 }
 
+size_t ppkt_chain_length(struct ppkt_t *p)
+{
+    assert(p);
+    size_t length = 0;
+
+    while (p)
+    {
+        length++;
+        p = p->next;
+    }
+
+    return length;
+}
+
 profinet_err_t ppkt_send(int fd, struct ppkt_t *p)
 {
     assert(fd != -1);
