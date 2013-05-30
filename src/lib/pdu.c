@@ -15,15 +15,15 @@ profinet_err_t profinet_pdu_send(struct profinet_dev *dev, struct ppkt_t **p)
 
     struct profinet_pdu_header *hdr = (struct profinet_pdu_header*)ppkt_payload(pduhdr);
 
+    *p = ppkt_prefix_header(pduhdr, *p);
+    assert(*p);
+
     hdr->unknown = 0x32; // TODO constantify
     hdr->version = 3;
     hdr->unknown2 = 0;
     hdr->unknown3 = 0;
-    hdr->plen = htons(ppkt_length(*p));
+    hdr->plen = htons(ppkt_chain_size(*p));
     hdr->dlen = 0;
-
-    *p = ppkt_prefix_header(pduhdr, *p);
-    assert(*p);
 
     return profinet_iso_send(dev, p);
 }

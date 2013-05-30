@@ -49,7 +49,12 @@ uint8_t* ppkt_payload(struct ppkt_t *p)
     return p->payload + p->offset;
 }
 
-size_t ppkt_length(struct ppkt_t *p)
+size_t ppkt_size(struct ppkt_t *p)
+{
+    return p->size;
+}
+
+size_t ppkt_chain_size(struct ppkt_t *p)
 {
     assert(p);
     size_t length = 0;
@@ -63,7 +68,7 @@ size_t ppkt_length(struct ppkt_t *p)
     return length;
 }
 
-size_t ppkt_chain_length(struct ppkt_t *p)
+size_t ppkt_chain_count(struct ppkt_t *p)
 {
     assert(p);
     size_t length = 0;
@@ -82,19 +87,26 @@ profinet_err_t ppkt_send(int fd, struct ppkt_t *p)
     assert(fd != -1);
     assert(p);
 
-    unsigned int offset = 0;
+    size_t size = ppkt_chain_size(p);
 
-    while (offset < p->size)
+    size_t pkts = ppkt_chain_count(p);
+    assert(pkts >= 1);
+    struct iovec *iov = malloc(sizeof(struct iovec) * pkts);
+    if (! iov)
+        return PROFINET_ERR_NO_MEM;
+
+    for (size_t i = 0; i < pkts; i++)
     {
-        int ret = write(fd, p->payload + offset, p->size - offset);
-        if (ret == -1)
-            return PROFINET_ERR_SEND_FAILED;
+        iov[i].iov_base = ppkt_payload(p);
+        iov[i].iov_len = ppkt_size(p);
 
-        offset += ret;
+        p = p->next;
     }
 
-    if (p->next)
-        return ppkt_send(fd, p->next);
+    ssize_t ret = writev(fd, iov, pkts);
+    assert(size == (size_t)ret);
 
-    return PROFINET_ERR_NONE;
+    free(iov);
+
+    return ret == -1 ? PROFINET_ERR_SEND_FAILED : PROFINET_ERR_NONE;
 }
