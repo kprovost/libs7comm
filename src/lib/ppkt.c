@@ -40,8 +40,8 @@ void ppkt_free(struct ppkt_t *p)
 
 struct ppkt_t *ppkt_prefix_header(struct ppkt_t *hdr, struct ppkt_t *p)
 {
-    p->next = hdr;
-    return p;
+    hdr->next = p;
+    return hdr;
 }
 
 uint8_t* ppkt_payload(struct ppkt_t *p)
