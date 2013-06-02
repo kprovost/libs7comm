@@ -45,10 +45,30 @@ void pcap_disconnect(struct pcap_dev_t *dev)
     free(dev);
 }
 
+static void pcap_receive_tcp(struct pcap_dev_t *dev, struct ppkt_t *p)
+{
+    assert(dev);
+    assert(p);
+}
+
 static void pcap_receive_ipv4(struct pcap_dev_t *dev, struct ppkt_t *p)
 {
     assert(dev);
     assert(p);
+
+    if (ppkt_size(p) < sizeof(struct iphdr))
+        return;
+
+    struct iphdr *iph = (struct iphdr*)ppkt_payload(p);
+    assert(iph->version == 4);
+
+    uint8_t ip_proto = iph->protocol;
+    uint8_t header_len = iph->ihl * 4;
+
+    ppkt_pull(p, header_len);
+
+    if (ip_proto == IPPROTO_TCP)
+        pcap_receive_tcp(dev, p);
 }
 
 static void pcap_receive(u_char *user, const struct pcap_pkthdr *h,
@@ -67,6 +87,8 @@ static void pcap_receive(u_char *user, const struct pcap_pkthdr *h,
     uint16_t eth_proto = ntohs(eh->h_proto);
     if (eth_proto != ETH_P_IP)
         goto done;
+
+    ppkt_pull(p, sizeof(struct ethhdr));
 
     pcap_receive_ipv4(dev, p);
 
