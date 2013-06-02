@@ -49,6 +49,23 @@ static void pcap_receive_tcp(struct pcap_dev_t *dev, struct ppkt_t *p)
 {
     assert(dev);
     assert(p);
+
+    if (ppkt_size(p) < sizeof(struct tcphdr))
+        return;
+
+    struct tcphdr *tcph = (struct tcphdr*)ppkt_payload(p);
+    uint16_t src_port = ntohs(tcph->source);
+    int hdr_len = tcph->doff * 4;
+    assert(hdr_len >= sizeof(struct tcphdr));
+
+    ppkt_pull(p, hdr_len);
+
+    if (ppkt_size(p) == 0)
+        // ACK packet?
+        return;
+
+    if (src_port == 102)
+        dev->receive(p);
 }
 
 static void pcap_receive_ipv4(struct pcap_dev_t *dev, struct ppkt_t *p)
