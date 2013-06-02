@@ -28,4 +28,6 @@ size_t ppkt_chain_count(struct ppkt_t *p);
 
 struct ppkt_t* ppkt_next(struct ppkt_t *p);
 
+void ppkt_pull(struct ppkt_t *p, size_t size);
+
 #endif

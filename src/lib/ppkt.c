@@ -73,7 +73,7 @@ uint8_t* ppkt_payload(struct ppkt_t *p)
 size_t ppkt_size(struct ppkt_t *p)
 {
     assert(p);
-    return p->size;
+    return p->size - p->offset;
 }
 
 size_t ppkt_chain_size(struct ppkt_t *p)
@@ -83,7 +83,7 @@ size_t ppkt_chain_size(struct ppkt_t *p)
 
     while (p)
     {
-        length += p->size;
+        length += ppkt_size(p);
         p = p->next;
     }
 
@@ -108,4 +108,12 @@ struct ppkt_t* ppkt_next(struct ppkt_t *p)
 {
     assert(p);
     return p->next;
+}
+
+void ppkt_pull(struct ppkt_t *p, size_t size)
+{
+    assert(p);
+    assert(size < ppkt_size(p));
+
+    p->offset += size;
 }
