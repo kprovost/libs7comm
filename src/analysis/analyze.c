@@ -183,55 +183,14 @@ void pcap_parse_tcp(u_char *user, const u_char *bytes, const int len)
     else
         printf("Unknown connection at dest port = %d, src_port = %d\n",
                 dst_port, src_port);
-}
-
-void pcap_parse_ip4(u_char *user, const u_char *bytes, const int len)
-{
-    assert(! user);
-
-    if (len < sizeof(struct iphdr))
-        return;
-
-    struct iphdr *iph = (struct iphdr*)bytes;
-    assert(iph->version == 4);
-
-    uint8_t ip_proto = iph->protocol;
-    uint8_t header_len = iph->ihl * 4;
-
-    switch (ip_proto)
-    {
-        case IPPROTO_TCP:
-            pcap_parse_tcp(user, bytes + header_len, len - header_len);
-            break;
-        case IPPROTO_UDP:
-        default:
-            printf("Unknown IP protocol %d\n", ip_proto);
-    }
-}
-
-void pcap_callback(u_char *user, const struct pcap_pkthdr *h,
-        const u_char *bytes)
-{
-    assert(! user);
-
-    if (h->caplen < sizeof(struct ethhdr))
-        return;
-
-    struct ethhdr *eh = (struct ethhdr*)bytes;
-    uint16_t eth_proto = ntohs(eh->h_proto);
-    switch (eth_proto)
-    {
-        case ETH_P_IP:
-            pcap_parse_ip4(user, bytes + sizeof(struct ethhdr), h->caplen - sizeof(struct ethhdr));
-            break;
-        case ETH_P_ARP:
-            // We don't care about arp.
-            break;
-        default:
-            printf("Unknown ethernet protocol = %02x\n", eth_proto);
-            break;
-    }
 }*/
+
+static err_t analyze_receive(struct ppkt_t *p)
+{
+    assert(p);
+    printf("pkt...\n");
+    return ERR_NONE;
+}
 
 int main(int argc, char** argv)
 {
@@ -243,7 +202,7 @@ int main(int argc, char** argv)
         return 1;
     }
 
-    pdev = pcap_connect(argv[1], NULL);
+    pdev = pcap_connect(argv[1], &analyze_receive);
 
     err_t err = ERR_NONE;
     do
