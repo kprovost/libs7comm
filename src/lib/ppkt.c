@@ -50,7 +50,7 @@ void ppkt_free(struct ppkt_t *p)
     if (p->next)
         ppkt_free(p->next);
 
-    if (! (p->flags & PPKT_FLAG_ALLOCATED))
+    if (p->flags & PPKT_FLAG_ALLOCATED)
             free(p->payload);
     free(p);
 }
