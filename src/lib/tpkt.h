@@ -6,7 +6,7 @@
 
 struct tpkt_dev_t;
 
-struct tpkt_dev_t* tpkt_connect(const char *addr, ppkt_receive_function_t func);
+struct tpkt_dev_t* tpkt_connect(const char *addr, ppkt_receive_function_t func, void *user);
 err_t tpkt_send(struct tpkt_dev_t *dev, struct ppkt_t *p);
 
 #endif

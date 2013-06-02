@@ -7,7 +7,7 @@
 
 struct ppkt_t;
 
-typedef err_t (*ppkt_receive_function_t)(struct ppkt_t *p);
+typedef err_t (*ppkt_receive_function_t)(struct ppkt_t *p, void *user);
 
 struct ppkt_t *ppkt_alloc(size_t size);
 struct ppkt_t *ppkt_create(uint8_t *data, size_t size);

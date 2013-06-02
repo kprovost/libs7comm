@@ -14,9 +14,10 @@ struct pcap_dev_t
 {
     pcap_t *pcap;
     ppkt_receive_function_t receive;
+    void *user;
 };
 
-struct pcap_dev_t* pcap_connect(const char *filename, ppkt_receive_function_t receive)
+struct pcap_dev_t* pcap_connect(const char *filename, ppkt_receive_function_t receive, void *user)
 {
     assert(filename);
     assert(receive);
@@ -28,6 +29,7 @@ struct pcap_dev_t* pcap_connect(const char *filename, ppkt_receive_function_t re
         return NULL;
 
     dev->receive = receive;
+    dev->user = user;
     dev->pcap = pcap_open_offline(filename, errbuf);
     if (! dev->pcap)
     {
@@ -65,7 +67,7 @@ static void pcap_receive_tcp(struct pcap_dev_t *dev, struct ppkt_t *p)
         return;
 
     if (src_port == 102)
-        dev->receive(p);
+        dev->receive(p, dev->user);
 }
 
 static void pcap_receive_ipv4(struct pcap_dev_t *dev, struct ppkt_t *p)

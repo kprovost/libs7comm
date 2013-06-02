@@ -185,9 +185,10 @@ void pcap_parse_tcp(u_char *user, const u_char *bytes, const int len)
                 dst_port, src_port);
 }*/
 
-static err_t analyze_receive(struct ppkt_t *p)
+static err_t analyze_receive(struct ppkt_t *p, void *user)
 {
     assert(p);
+    assert(! user);
     printf("pkt...\n");
     return ERR_NONE;
 }
@@ -202,7 +203,7 @@ int main(int argc, char** argv)
         return 1;
     }
 
-    pdev = pcap_connect(argv[1], &analyze_receive);
+    pdev = pcap_connect(argv[1], &analyze_receive, NULL);
 
     err_t err = ERR_NONE;
     do

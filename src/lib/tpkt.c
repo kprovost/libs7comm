@@ -12,16 +12,20 @@ struct tpkt_dev_t
     ppkt_receive_function_t receive;
     struct tcp_dev_t  *tcp;
     struct pcap_dev_t *pcap;
+    void *user;
 };
 
-static err_t tpkt_receive(struct ppkt_t *p)
+static err_t tpkt_receive(struct ppkt_t *p, void *user)
 {
     assert(p);
+
+    struct tpkt_dev_t *dev = (struct tpkt_dev_t*)user;
+    assert(dev);
 
     return ERR_UNKNOWN;
 }
 
-struct tpkt_dev_t* tpkt_connect(const char *addr, ppkt_receive_function_t receive)
+struct tpkt_dev_t* tpkt_connect(const char *addr, ppkt_receive_function_t receive, void *user)
 {
     assert(addr);
     assert(receive);
@@ -33,12 +37,13 @@ struct tpkt_dev_t* tpkt_connect(const char *addr, ppkt_receive_function_t receiv
     dev->tcp = NULL;
     dev->pcap = NULL;
     dev->receive = receive;
+    dev->user = user;
 
     /* Little special here, but it's easy to test.
      *
      * We try to 'connect' to a pcap file, if that fails we try to use the addr
      * as a TCP target instead */
-    dev->pcap = pcap_connect(addr, tpkt_receive);
+    dev->pcap = pcap_connect(addr, tpkt_receive, dev);
     if (! dev->pcap)
     {
         dev->tcp = tcp_connect(addr, TPKT_PORT, tpkt_receive);
