@@ -113,7 +113,7 @@ struct ppkt_t* ppkt_next(struct ppkt_t *p)
 void ppkt_pull(struct ppkt_t *p, size_t size)
 {
     assert(p);
-    assert(size < ppkt_size(p));
+    assert(size <= ppkt_size(p));
 
     p->offset += size;
 }
