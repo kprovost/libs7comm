@@ -79,8 +79,8 @@ err_t pcap_poll(struct pcap_dev_t *dev)
     assert(dev);
     assert(dev->pcap);
 
-    int ret = pcap_loop(dev->pcap, 1, pcap_receive, (void*)dev);
-    if (ret < 0)
+    int ret = pcap_dispatch(dev->pcap, 1, pcap_receive, (void*)dev);
+    if (ret <= 0)
         return ERR_CONNECTION_CLOSED;
 
     return ERR_NONE;
