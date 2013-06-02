@@ -22,6 +22,6 @@ size_t ppkt_chain_size(struct ppkt_t *p);
 /* Number of ppkt_t in the chain */
 size_t ppkt_chain_count(struct ppkt_t *p);
 
-profinet_err_t ppkt_send(int fd, struct ppkt_t *p);
+err_t ppkt_send(int fd, struct ppkt_t *p);
 
 #endif

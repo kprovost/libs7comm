@@ -63,25 +63,25 @@ void profinet_disconnect(struct profinet_dev *dev)
     free(dev);
 }
 
-static profinet_err_t profinet_create_read_request(int db, int number, struct ppkt_t **p)
+static err_t profinet_create_read_request(int db, int number, struct ppkt_t **p)
 {
     assert(p);
 
     *p = ppkt_create(sizeof(struct profinet_request));
     if (! *p)
-        return PROFINET_ERR_NO_MEM;
+        return ERR_NO_MEM;
 
-    return PROFINET_ERR_NONE;
+    return ERR_NONE;
 }
 
-profinet_err_t profinet_read_word(struct profinet_dev *dev, int db, int number, uint16_t *value)
+err_t profinet_read_word(struct profinet_dev *dev, int db, int number, uint16_t *value)
 {
     assert(dev);
     assert(value);
 
     struct ppkt_t *p;
-    profinet_err_t err = profinet_create_read_request(db, number, &p);
-    if (! PROFINET_OK(err))
+    err_t err = profinet_create_read_request(db, number, &p);
+    if (! OK(err))
         return err;
 
     struct profinet_request *req = (struct profinet_request*)ppkt_payload(p);
@@ -94,7 +94,7 @@ profinet_err_t profinet_read_word(struct profinet_dev *dev, int db, int number, 
     req->start_addr = htons(number);
 
     err = profinet_pdu_send(dev, &p);
-    if (! PROFINET_OK(err))
+    if (! OK(err))
         goto exit;
 
     // TODO wait for and parse reply

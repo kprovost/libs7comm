@@ -82,7 +82,7 @@ size_t ppkt_chain_count(struct ppkt_t *p)
     return length;
 }
 
-profinet_err_t ppkt_send(int fd, struct ppkt_t *p)
+err_t ppkt_send(int fd, struct ppkt_t *p)
 {
     assert(fd != -1);
     assert(p);
@@ -93,7 +93,7 @@ profinet_err_t ppkt_send(int fd, struct ppkt_t *p)
     assert(pkts >= 1);
     struct iovec *iov = malloc(sizeof(struct iovec) * pkts);
     if (! iov)
-        return PROFINET_ERR_NO_MEM;
+        return ERR_NO_MEM;
 
     for (size_t i = 0; i < pkts; i++)
     {
@@ -108,5 +108,5 @@ profinet_err_t ppkt_send(int fd, struct ppkt_t *p)
 
     free(iov);
 
-    return ret == -1 ? PROFINET_ERR_SEND_FAILED : PROFINET_ERR_NONE;
+    return ret == -1 ? ERR_SEND_FAILED : ERR_NONE;
 }

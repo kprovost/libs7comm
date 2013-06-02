@@ -4,6 +4,6 @@
 #include <stdint.h>
 #include "ppkt.h"
 
-profinet_err_t profinet_iso_send(struct profinet_dev *dev, struct ppkt_t **p);
+err_t profinet_iso_send(struct profinet_dev *dev, struct ppkt_t **p);
 
 #endif

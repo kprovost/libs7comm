@@ -14,8 +14,8 @@ int main(int argc, char **argv)
     }
 
     uint16_t temp = 0;
-    profinet_err_t err = profinet_read_word(dev, 10, 4, &temp);
-    if (! PROFINET_OK(err))
+    err_t err = profinet_read_word(dev, 10, 4, &temp);
+    if (! OK(err))
     {
         printf("Failed to read temperature\n");
         goto exit;
@@ -25,7 +25,7 @@ int main(int argc, char **argv)
 
     uint16_t setpoint = 0;
     err = profinet_read_word(dev, 10, 6, &setpoint);
-    if (! PROFINET_OK(err))
+    if (! OK(err))
     {
         printf("Failed to read temperature\n");
         goto exit;

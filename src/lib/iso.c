@@ -4,14 +4,14 @@
 #include <arpa/inet.h>
 #include <assert.h>
 
-profinet_err_t profinet_iso_send(struct profinet_dev *dev, struct ppkt_t **p)
+err_t profinet_iso_send(struct profinet_dev *dev, struct ppkt_t **p)
 {
     assert(p);
     assert(*p);
 
     struct ppkt_t *isohdr = ppkt_create(sizeof(struct profinet_iso_header));
     if (! isohdr)
-        return PROFINET_ERR_NO_MEM;
+        return ERR_NO_MEM;
 
     struct profinet_iso_header *hdr = (struct profinet_iso_header*)ppkt_payload(isohdr);
 
