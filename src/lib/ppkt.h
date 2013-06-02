@@ -7,7 +7,8 @@
 
 struct ppkt_t;
 
-struct ppkt_t *ppkt_create(size_t size);
+struct ppkt_t *ppkt_alloc(size_t size);
+struct ppkt_t *ppkt_create(uint8_t *data, size_t size);
 void ppkt_free(struct ppkt_t *p);
 
 struct ppkt_t *ppkt_prefix_header(struct ppkt_t *hdr, struct ppkt_t *p);

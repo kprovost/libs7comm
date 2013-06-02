@@ -9,7 +9,7 @@ err_t profinet_iso_send(struct profinet_dev *dev, struct ppkt_t **p)
     assert(p);
     assert(*p);
 
-    struct ppkt_t *isohdr = ppkt_create(sizeof(struct profinet_iso_header));
+    struct ppkt_t *isohdr = ppkt_alloc(sizeof(struct profinet_iso_header));
     if (! isohdr)
         return ERR_NO_MEM;
 

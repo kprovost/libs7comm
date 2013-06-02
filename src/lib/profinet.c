@@ -67,7 +67,7 @@ static err_t profinet_create_read_request(int db, int number, struct ppkt_t **p)
 {
     assert(p);
 
-    *p = ppkt_create(sizeof(struct profinet_request));
+    *p = ppkt_alloc(sizeof(struct profinet_request));
     if (! *p)
         return ERR_NO_MEM;
 

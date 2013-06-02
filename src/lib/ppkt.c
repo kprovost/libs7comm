@@ -5,21 +5,37 @@
 #include <sys/uio.h>
 #include <assert.h>
 
+#define PPKT_FLAG_ALLOCATED 1
+
 struct ppkt_t
 {
     uint8_t       *payload;
     size_t         size;
     size_t         offset;
     struct ppkt_t *next;
+    uint8_t        flags;
 };
 
-struct ppkt_t *ppkt_create(size_t size)
+struct ppkt_t *ppkt_alloc(size_t size)
 {
     struct ppkt_t *p = malloc(sizeof(struct ppkt_t));
     memset(p, 0, sizeof(struct ppkt_t));
 
     p->payload = malloc(size);
     p->size = size;
+    p->flags = PPKT_FLAG_ALLOCATED;
+
+    return p;
+}
+
+struct ppkt_t *ppkt_create(uint8_t *data, size_t size)
+{
+    struct ppkt_t *p = malloc(sizeof(struct ppkt_t));
+    memset(p, 0, sizeof(struct ppkt_t));
+
+    p->payload = data;
+    p->size = size;
+    p->flags = 0;
 
     return p;
 }
@@ -34,7 +50,8 @@ void ppkt_free(struct ppkt_t *p)
     if (p->next)
         ppkt_free(p->next);
 
-    free(p->payload);
+    if (! (p->flags & PPKT_FLAG_ALLOCATED))
+            free(p->payload);
     free(p);
 }
 

@@ -9,7 +9,7 @@ err_t profinet_pdu_send(struct profinet_dev *dev, struct ppkt_t **p)
     assert(p);
     assert(*p);
 
-    struct ppkt_t *pduhdr = ppkt_create(sizeof(struct profinet_pdu_header));
+    struct ppkt_t *pduhdr = ppkt_alloc(sizeof(struct profinet_pdu_header));
     if (! pduhdr)
         return ERR_NO_MEM;
 
