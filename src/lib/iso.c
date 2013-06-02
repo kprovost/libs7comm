@@ -27,5 +27,6 @@ err_t profinet_iso_send(struct profinet_dev *dev, struct ppkt_t **p)
 
     hdr->len = ppkt_chain_size(*p);
 
-    return ppkt_send(dev->fd, *p);
+    //return ppkt_send(dev->fd, *p);
+    return ERR_UNKNOWN;
 }

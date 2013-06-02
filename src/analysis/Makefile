@@ -1,8 +1,8 @@
 
 all: analyze
 
-CFLAGS = -g -Wall -Werror -I../lib
-LDFLAGS = -lpcap
+CFLAGS = -g -Wall -Werror -I../include -I../lib
+LDFLAGS = -lpcap -L../lib -lprofinet
 
 analyze: analyze.o
 	$(CC) $(LDFLAGS) -o $@ $<

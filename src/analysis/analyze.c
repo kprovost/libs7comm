@@ -3,15 +3,15 @@
 #include <stdint.h>
 #include <stdio.h>
 #include <arpa/inet.h>
-#include <pcap/pcap.h>
 #include <linux/if_ether.h>
 #include <linux/ip.h>
 #include <linux/tcp.h>
 
+#include "pcap.h"
 #include <profinet_types.h>
 #include <profinet_debug.h>
 
-void dump_profinet_iso_header(const struct profinet_iso_header *h, const int len)
+/*void dump_profinet_iso_header(const struct profinet_iso_header *h, const int len)
 {
     printf("Protocol = 0x%02x\n", h->prot);
     assert(h->prot == PROFINET_ISO_PROTOCOL);
@@ -231,11 +231,11 @@ void pcap_callback(u_char *user, const struct pcap_pkthdr *h,
             printf("Unknown ethernet protocol = %02x\n", eth_proto);
             break;
     }
-}
+}*/
 
 int main(int argc, char** argv)
 {
-    char errbuf[PCAP_ERRBUF_SIZE];
+    struct pcap_dev_t *pdev;
 
     if (argc < 2)
     {
@@ -243,19 +243,15 @@ int main(int argc, char** argv)
         return 1;
     }
 
-    pcap_t *p = pcap_open_offline(argv[1], errbuf);
-    if (! p)
-    {
-        printf("Failed to open file %s: %s\n", argv[1], errbuf);
-        return 1;
-    }
+    pdev = pcap_connect(argv[1], NULL);
 
-    int ret = pcap_loop(p, 0, pcap_callback, NULL);
-    if (ret < 0)
+    err_t err = ERR_NONE;
+    do
     {
-        printf("pcap_loop error %d\n", ret);
-        return 1;
-    }
+        err = pcap_poll(pdev);
+    } while (OK(err));
+
+    pcap_disconnect(pdev);
 
     return 0;
 }

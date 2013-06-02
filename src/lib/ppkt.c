@@ -57,17 +57,22 @@ void ppkt_free(struct ppkt_t *p)
 
 struct ppkt_t *ppkt_prefix_header(struct ppkt_t *hdr, struct ppkt_t *p)
 {
+    assert(p);
+    assert(hdr);
+
     hdr->next = p;
     return hdr;
 }
 
 uint8_t* ppkt_payload(struct ppkt_t *p)
 {
+    assert(p);
     return p->payload + p->offset;
 }
 
 size_t ppkt_size(struct ppkt_t *p)
 {
+    assert(p);
     return p->size;
 }
 
@@ -99,31 +104,8 @@ size_t ppkt_chain_count(struct ppkt_t *p)
     return length;
 }
 
-err_t ppkt_send(int fd, struct ppkt_t *p)
+struct ppkt_t* ppkt_next(struct ppkt_t *p)
 {
-    assert(fd != -1);
     assert(p);
-
-    size_t size = ppkt_chain_size(p);
-
-    size_t pkts = ppkt_chain_count(p);
-    assert(pkts >= 1);
-    struct iovec *iov = malloc(sizeof(struct iovec) * pkts);
-    if (! iov)
-        return ERR_NO_MEM;
-
-    for (size_t i = 0; i < pkts; i++)
-    {
-        iov[i].iov_base = ppkt_payload(p);
-        iov[i].iov_len = ppkt_size(p);
-
-        p = p->next;
-    }
-
-    ssize_t ret = writev(fd, iov, pkts);
-    assert(size == (size_t)ret);
-
-    free(iov);
-
-    return ret == -1 ? ERR_SEND_FAILED : ERR_NONE;
+    return p->next;
 }

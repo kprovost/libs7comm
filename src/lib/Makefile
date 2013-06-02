@@ -4,10 +4,13 @@ OBJS =\
 	  profinet.o \
 	  ppkt.o \
 	  pdu.o \
-	  iso.o
+	  iso.o \
+	  tcp.o \
+	  tpkt.o \
+	  pcap.o
 
 CFLAGS = -g -Wall -Werror -I../include -fPIC -std=gnu99
-LDFLAGS = -shared
+LDFLAGS = -shared -lpcap
 
 libprofinet.so: $(OBJS)
 	$(CC) $(LDFLAGS) -o $@ $^
