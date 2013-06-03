@@ -1,0 +1,16 @@
+As the Profinet standard is not freely available this is by neccessity a
+reverse engineering project, which means that much of the following is
+guesswork.
+
+libnodave has already done some of this reverse engineering work, but I
+suspect it got a few things wrong.
+It does not seem to start from the assumption that the comminication is done
+through the ISO COTP protocol (on top of TCP).
+
+At least some of those standards are publicly available:
+ISO Transport on top of TCP: http://tools.ietf.org/html/rfc2126
+ (Specifically 4.3 TPKT Packet Format)
+ (Also note 6.1 TCP Connection Establishment)
+
+ISO Transport specification: http://tools.ietf.org/html/rfc905
+
