@@ -1,0 +1,10 @@
+*.o
+*.o.d
+*.html
+pnget
+analyze
+libprofinet.so
+tags
+cscope.files
+cscope.out
+core
