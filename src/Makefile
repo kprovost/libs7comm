@@ -1,13 +1,15 @@
+all: lib/libprofinet.so pnget/pnget analysis/analyze
 
-all: pnget/pnget
+include build/debug.mk
+include build/rules.mk
+include build/vars.mk
 
-pnget/pnget: lib/libprofinet.so FORCE
-	$(MAKE) -C pnget
+include lib/build.mk
+include pnget/build.mk
+include analysis/build.mk
 
-lib/libprofinet.so: FORCE
-	$(MAKE) -C lib
+lib/libprofinet.so: $(LIB_OBJS)
 
-.PHONY: clean FORCE
-clean:
-	$(MAKE) -C pnget clean
-	$(MAKE) -C lib clean
+pnget/pnget: $(PNGET_OBJS)
+
+analysis/analyze: $(ANALYSIS_OBJS)
