@@ -64,6 +64,20 @@ struct ppkt_t *ppkt_prefix_header(struct ppkt_t *hdr, struct ppkt_t *p)
     return hdr;
 }
 
+struct ppkt_t *ppkt_append_footer(struct ppkt_t *footer, struct ppkt_t *p)
+{
+    assert(footer);
+
+    if (! p)
+        return footer;
+
+    struct ppkt_t *it = p;
+    while (it->next) it = it->next;
+    it->next = footer;
+
+    return p;
+}
+
 uint8_t* ppkt_payload(struct ppkt_t *p)
 {
     assert(p);
