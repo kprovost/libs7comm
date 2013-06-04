@@ -58,7 +58,34 @@ struct tpkt_dev_t* tpkt_connect(const char *addr, ppkt_receive_function_t receiv
     return dev;
 }
 
+void tpkt_disconnect(struct tpkt_dev_t *dev)
+{
+    assert(dev);
+
+    if (dev->pcap)
+    {
+        pcap_disconnect(dev->pcap);
+    }
+    else
+    {
+        assert(dev->tcp);
+        tcp_disconnect(dev->tcp);
+    }
+
+    free(dev);
+}
+
 err_t tpkt_t_send(struct tpkt_dev_t *dev, struct ppkt_t *p)
 {
     return ERR_UNKNOWN;
+}
+
+err_t tpkt_poll(struct tpkt_dev_t *dev)
+{
+    assert(dev);
+
+    if (dev->pcap)
+        return pcap_poll(dev->pcap);
+    else
+        return tcp_poll(dev->tcp);
 }

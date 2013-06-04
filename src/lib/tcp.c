@@ -95,3 +95,10 @@ err_t tcp_send(struct tcp_dev_t *dev, struct ppkt_t *p)
 
     return ret == -1 ? ERR_SEND_FAILED : ERR_NONE;
 }
+
+err_t tcp_poll(struct tcp_dev_t *dev)
+{
+    assert(dev);
+    assert(0); // Not implemented yet
+    return ERR_UNKNOWN;
+}

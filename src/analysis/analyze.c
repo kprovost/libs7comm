@@ -7,7 +7,7 @@
 #include <linux/ip.h>
 #include <linux/tcp.h>
 
-#include "pcap.h"
+#include "tpkt.h"
 #include <profinet_types.h>
 #include <profinet_debug.h>
 
@@ -211,7 +211,7 @@ static err_t analyze_receive(struct ppkt_t *p, void *user)
 
 int main(int argc, char** argv)
 {
-    struct pcap_dev_t *pdev;
+    struct tpkt_dev_t *pdev;
 
     if (argc < 2)
     {
@@ -219,15 +219,15 @@ int main(int argc, char** argv)
         return 1;
     }
 
-    pdev = pcap_connect(argv[1], &analyze_receive, NULL);
+    pdev = tpkt_connect(argv[1], &analyze_receive, NULL);
 
     err_t err = ERR_NONE;
     do
     {
-        err = pcap_poll(pdev);
+        err = tpkt_poll(pdev);
     } while (OK(err));
 
-    pcap_disconnect(pdev);
+    tpkt_disconnect(pdev);
 
     return 0;
 }
