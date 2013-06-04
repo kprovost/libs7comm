@@ -185,11 +185,27 @@ void pcap_parse_tcp(u_char *user, const u_char *bytes, const int len)
                 dst_port, src_port);
 }*/
 
+static void dump_bytes(const uint8_t *bytes, size_t size)
+{
+    for (size_t i = 0; i < size; i++)
+    {
+        printf("%02x ", bytes[i]);
+
+        if (i % 8 == 7)
+            printf("  ");
+
+        if (i % 16 == 15)
+            printf("\n");
+    }
+}
+
 static err_t analyze_receive(struct ppkt_t *p, void *user)
 {
     assert(p);
     assert(! user);
-    printf("pkt...\n");
+    printf("Packet:\n");
+    dump_bytes(ppkt_payload(p), 32);
+
     return ERR_NONE;
 }
 
