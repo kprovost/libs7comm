@@ -15,6 +15,8 @@ void ppkt_free(struct ppkt_t *p);
 
 struct ppkt_t *ppkt_prefix_header(struct ppkt_t *hdr, struct ppkt_t *p);
 struct ppkt_t *ppkt_append_footer(struct ppkt_t *footer, struct ppkt_t *p);
+struct ppkt_t *ppkt_coalesce(struct ppkt_t *p, size_t size);
+void ppkt_split(struct ppkt_t *front, struct ppkt_t **back, size_t cut);
 
 uint8_t* ppkt_payload(struct ppkt_t *p);
 

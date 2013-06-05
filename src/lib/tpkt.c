@@ -4,6 +4,7 @@
 
 #include <assert.h>
 #include <stdlib.h>
+#include <arpa/inet.h>
 
 #define TPKT_PORT 102
 
@@ -13,7 +14,16 @@ struct tpkt_dev_t
     struct tcp_dev_t  *tcp;
     struct pcap_dev_t *pcap;
     void *user;
+
+    struct ppkt_t *pktqueue;
 };
+
+struct tpkthdr_t
+{
+    uint8_t version;
+    uint8_t reserved;
+    uint16_t size;
+} __attribute__((packed));
 
 static err_t tpkt_receive(struct ppkt_t *p, void *user)
 {
@@ -22,7 +32,32 @@ static err_t tpkt_receive(struct ppkt_t *p, void *user)
     struct tpkt_dev_t *dev = (struct tpkt_dev_t*)user;
     assert(dev);
 
-    return ERR_UNKNOWN;
+    dev->pktqueue = ppkt_append_footer(p, dev->pktqueue);
+
+    if (ppkt_chain_size(dev->pktqueue) < sizeof(struct tpkthdr_t))
+        return ERR_NONE;
+
+    dev->pktqueue = ppkt_coalesce(dev->pktqueue, sizeof(struct tpkthdr_t));
+
+    struct tpkthdr_t *tpkthdr = (struct tpkthdr_t*)ppkt_payload(dev->pktqueue);
+
+    assert(tpkthdr->version == 3);
+
+    size_t tpkt_size = ntohs(tpkthdr->size);
+    if (ppkt_chain_size(dev->pktqueue) < tpkt_size)
+        // Need more data
+        return ERR_NONE;
+
+    // Split the chain into before and after
+    struct ppkt_t *pkt = dev->pktqueue;
+    ppkt_split(pkt, &dev->pktqueue, tpkt_size);
+
+    // Skip header in the arrived packet
+    ppkt_pull(pkt, sizeof(struct tpkthdr_t));
+
+    // Pass the result to our upper layer
+    assert(dev->receive);
+    return dev->receive(pkt, dev->user);
 }
 
 struct tpkt_dev_t* tpkt_connect(const char *addr, ppkt_receive_function_t receive, void *user)
@@ -38,6 +73,7 @@ struct tpkt_dev_t* tpkt_connect(const char *addr, ppkt_receive_function_t receiv
     dev->pcap = NULL;
     dev->receive = receive;
     dev->user = user;
+    dev->pktqueue = NULL;
 
     /* Little special here, but it's easy to test.
      *
@@ -72,6 +108,7 @@ void tpkt_disconnect(struct tpkt_dev_t *dev)
         tcp_disconnect(dev->tcp);
     }
 
+    ppkt_free(dev->pktqueue);
     free(dev);
 }
 

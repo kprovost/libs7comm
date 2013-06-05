@@ -78,6 +78,73 @@ struct ppkt_t *ppkt_append_footer(struct ppkt_t *footer, struct ppkt_t *p)
     return p;
 }
 
+struct ppkt_t *ppkt_coalesce(struct ppkt_t *p, size_t size)
+{
+    assert(p);
+    assert(size > 0);
+
+    assert(ppkt_chain_size(p) >= size);
+
+    if (ppkt_size(p) >= size)
+        return p;
+
+    struct ppkt_t *new = ppkt_alloc(size);
+
+    size_t offset = 0;
+    while (offset < size)
+    {
+        size_t p_size = ppkt_size(p);
+        size_t to_add = size < p_size ? size : p_size;
+
+        memcpy(new->payload, ppkt_payload(p), size);
+        offset += to_add;
+
+        if (to_add == p_size)
+        {
+            struct ppkt_t *tmp = p;
+            p = p->next;
+            tmp->next = NULL;
+            ppkt_free(tmp);
+        }
+        else
+        {
+            ppkt_pull(p, to_add);
+        }
+    }
+
+    new->next = p;
+
+    return new;
+}
+
+void ppkt_split(struct ppkt_t *front, struct ppkt_t **back, size_t cut)
+{
+    assert(front);
+    assert(back);
+
+    struct ppkt_t *it = front;
+    size_t offset = 0;
+    while (it)
+    {
+        size_t pkt_size = ppkt_size(it);
+
+        if (offset + pkt_size >= cut)
+        {
+            *back = it->next;
+            size_t diff = cut - (offset + pkt_size);
+            if (*back)
+                ppkt_pull(*back, diff);
+            assert(it->size >= diff);
+            it->size -= diff;
+            return;
+        }
+
+        it = it->next;
+        offset += ppkt_size(it);
+    }
+    assert(0);
+}
+
 uint8_t* ppkt_payload(struct ppkt_t *p)
 {
     assert(p);
