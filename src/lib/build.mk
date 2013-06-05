@@ -7,7 +7,8 @@ lib_srcs := \
 	ppkt.c \
 	profinet.c \
 	tcp.c  \
-	tpkt.c
+	tpkt.c \
+	cotp.c
 
 #includes := include
 cflags := -fPIC
