@@ -112,9 +112,23 @@ void tpkt_disconnect(struct tpkt_dev_t *dev)
     free(dev);
 }
 
-err_t tpkt_t_send(struct tpkt_dev_t *dev, struct ppkt_t *p)
+err_t tpkt_send(struct tpkt_dev_t *dev, struct ppkt_t *p)
 {
-    return ERR_UNKNOWN;
+    assert(dev);
+    assert(p);
+
+    struct ppkt_t *hdr = ppkt_alloc(sizeof(struct tpkthdr_t));
+    struct tpkthdr_t *tpkthdr = (struct tpkthdr_t*)ppkt_payload(hdr);
+
+    tpkthdr->version = 3;
+    tpkthdr->reserved = 0;
+    tpkthdr->size = ppkt_chain_size(p);
+
+    p = ppkt_prefix_header(hdr, p);
+
+    // For obvious reasons pcap has no send.
+    assert(dev->tcp);
+    return tcp_send(dev->tcp, p);
 }
 
 err_t tpkt_poll(struct tpkt_dev_t *dev)
