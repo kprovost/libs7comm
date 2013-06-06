@@ -198,3 +198,12 @@ void ppkt_pull(struct ppkt_t *p, size_t size)
 
     p->offset += size;
 }
+
+void ppkt_cut(struct ppkt_t *p, size_t size)
+{
+    assert(p);
+    assert(! p->next); // Doesn't support chains yet
+    assert(size <= ppkt_size(p));
+
+    p->size -= size;
+}
