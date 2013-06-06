@@ -1,6 +1,5 @@
 #include "pdu.h"
 #include "profinet_types.h"
-#include "iso.h"
 #include <arpa/inet.h>
 #include <assert.h>
 
@@ -25,5 +24,5 @@ err_t profinet_pdu_send(struct profinet_dev *dev, struct ppkt_t **p)
     hdr->plen = htons(ppkt_chain_size(*p));
     hdr->dlen = 0;
 
-    return profinet_iso_send(dev, p);
+    return ERR_UNKNOWN;
 }

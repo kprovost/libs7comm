@@ -1,7 +1,6 @@
 include $(topdir)/build/head.mk
 
 lib_srcs := \
-	iso.c \
 	pcap.c \
 	pdu.c \
 	ppkt.c \
