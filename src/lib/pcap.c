@@ -75,7 +75,8 @@ static void pcap_receive_ipv4(struct pcap_dev_t *dev, struct ppkt_t *p)
     assert(dev);
     assert(p);
 
-    if (ppkt_size(p) < sizeof(struct iphdr))
+    size_t size = ppkt_size(p);
+    if (size < sizeof(struct iphdr))
         return;
 
     struct iphdr *iph = (struct iphdr*)ppkt_payload(p);
@@ -83,8 +84,18 @@ static void pcap_receive_ipv4(struct pcap_dev_t *dev, struct ppkt_t *p)
 
     uint8_t ip_proto = iph->protocol;
     uint8_t header_len = iph->ihl * 4;
+    uint16_t tot_len = ntohs(iph->tot_len);
+
+    if (tot_len > size)
+        // Invalid packet!
+        return;
 
     ppkt_pull(p, header_len);
+
+    // Note that the ppkt size might be bigger than the actual payload size as
+    // the ethernet layer tries to avoid runt packets, so cut down the ppkt to
+    // match the payload
+    ppkt_cut(p, size - tot_len);
 
     if (ip_proto == IPPROTO_TCP)
         pcap_receive_tcp(dev, p);
