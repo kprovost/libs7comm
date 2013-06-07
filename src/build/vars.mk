@@ -23,7 +23,7 @@ CFLAGS = -g -Wall -Werror \
 		 $(module_includes) \
 		 $(module_cflags)
 
-CXXFLAGS = -g -Wall -Werror \
+CPPFLAGS = -g -Wall -Werror \
 		 $(module_includes)
 
 LDFLAGS = $(module_ldflags)
