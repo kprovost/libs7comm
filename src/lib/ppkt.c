@@ -94,9 +94,11 @@ struct ppkt_t *ppkt_coalesce(struct ppkt_t *p, size_t size)
     while (offset < size)
     {
         size_t p_size = ppkt_size(p);
-        size_t to_add = size < p_size ? size : p_size;
+        size_t to_add = size - offset;
+        if (to_add > p_size)
+            to_add = p_size;
 
-        memcpy(new->payload, ppkt_payload(p), size);
+        memcpy(new->payload + offset, ppkt_payload(p), size);
         offset += to_add;
 
         if (to_add == p_size)
