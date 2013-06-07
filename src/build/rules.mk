@@ -40,6 +40,11 @@ pnget/pnget analysis/analyze test/tests:
 		lib/libprofinet.so \
 		$(LDFLAGS)
 
+.PHONY: test
+
+test: test/tests
+	./test/tests -v
+
 .PHONY: clean
 
 clean:

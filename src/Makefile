@@ -15,4 +15,4 @@ pnget/pnget: $(PNGET_OBJS)
 
 analysis/analyze: $(ANALYSIS_OBJS)
 
-test/tests: $(TEST_OBJS)
+test/tests: $(TEST_OBJS) lib/libprofinet.so
