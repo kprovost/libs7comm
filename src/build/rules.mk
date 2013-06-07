@@ -18,6 +18,13 @@ endif
 		$< \
 		-o $@
 
+%.o: %.cpp
+	@echo [CXX] $(@F)
+	$(Q)$(CXX) -MD -MP -MF $(addsuffix .d, $@) \
+		-c $(CPPFLAGS) \
+		$< \
+		-o $@
+
 %.so:
 	@echo [LD] $(@F)
 	$(Q)$(LD) -shared \
@@ -25,13 +32,13 @@ endif
 		-o $(@) \
 		$^
 
-pnget/pnget analysis/analyze:
+pnget/pnget analysis/analyze test/tests:
 	@echo [LD] $(@F)
-	$(Q)$(LD) \
-		$(LDFLAGS) \
+	$(Q)$(CXX) \
 		-o $(@) \
 		$^ \
-		lib/libprofinet.so
+		lib/libprofinet.so \
+		$(LDFLAGS)
 
 .PHONY: clean
 
@@ -39,3 +46,5 @@ clean:
 	rm -Rf lib/*.o lib/*.o.d lib/*.so
 	rm -Rf analysis/*.o analysis/*.o.d analysis/analyze
 	rm -Rf pnget/*.o pnget/*.o.d pnget/pnget
+	rm -Rf test/*.o test/*.o.d test/tests
+	rm -f cpputest*.xml
