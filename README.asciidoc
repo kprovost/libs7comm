@@ -15,3 +15,9 @@ To be able to read and write variables from/to a Siemens S7.
 Target audience
 ---------------
 Me. Just me. Don't use this, it'll turn your hair purple.
+
+Build requirements
+-------------------
+ * libpcap-dev
+ * libcpputest-dev
+ * gcc, g++, make
