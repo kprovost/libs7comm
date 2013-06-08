@@ -59,6 +59,7 @@ struct ppkt_t *ppkt_prefix_header(struct ppkt_t *hdr, struct ppkt_t *p)
 {
     assert(p);
     assert(hdr);
+    assert(p != hdr);
 
     hdr->next = p;
     return hdr;
@@ -73,6 +74,8 @@ struct ppkt_t *ppkt_append_footer(struct ppkt_t *footer, struct ppkt_t *p)
 
     struct ppkt_t *it = p;
     while (it->next) it = it->next;
+
+    assert(it != footer);
     it->next = footer;
 
     return p;
@@ -114,6 +117,7 @@ struct ppkt_t *ppkt_coalesce(struct ppkt_t *p, size_t size)
         }
     }
 
+    assert(new != p);
     new->next = p;
 
     return new;
@@ -130,6 +134,7 @@ static void ppkt_split_ppkt(struct ppkt_t *front, struct ppkt_t **back, size_t c
 
     ppkt_cut(front, ppkt_size(front) - cut);
 
+    assert(new != front->next);
     new->next = front->next;
     *back = new;
     front->next = NULL;
