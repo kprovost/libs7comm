@@ -99,6 +99,8 @@ static void pcap_receive_ipv4(struct pcap_dev_t *dev, struct ppkt_t *p)
 
     if (ip_proto == IPPROTO_TCP)
         pcap_receive_tcp(dev, p);
+    else
+        ppkt_free(p);
 }
 
 static void pcap_receive(u_char *user, const struct pcap_pkthdr *h,
@@ -111,19 +113,22 @@ static void pcap_receive(u_char *user, const struct pcap_pkthdr *h,
     struct ppkt_t *p = ppkt_create((uint8_t*)bytes, h->caplen);
 
     if (ppkt_size(p) < sizeof(struct ethhdr))
-        goto done;
+    {
+        ppkt_free(p);
+        return;
+    }
     
     struct ethhdr *eh = (struct ethhdr*)ppkt_payload(p);
     uint16_t eth_proto = ntohs(eh->h_proto);
     if (eth_proto != ETH_P_IP)
-        goto done;
+    {
+        ppkt_free(p);
+        return;
+    }
 
     ppkt_pull(p, sizeof(struct ethhdr));
 
     pcap_receive_ipv4(dev, p);
-
-done:
-    ppkt_free(p);
 }
 
 err_t pcap_poll(struct pcap_dev_t *dev)
