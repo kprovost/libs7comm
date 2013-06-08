@@ -112,3 +112,84 @@ TEST(ppkt, coalesce_two)
 
     ppkt_free(out);
 }
+
+TEST(ppkt, split_single)
+{
+    struct ppkt_t *p = ppkt_alloc(5);
+
+    for (int i = 0; i < 5; i++)
+    {
+        ppkt_payload(p)[i] = i;
+    }
+
+    struct ppkt_t *tail;
+
+    ppkt_split(p, &tail, 3);
+    CHECK(tail);
+    CHECK(1 == ppkt_chain_count(p));
+    CHECK(1 == ppkt_chain_count(tail));
+    CHECK(3 == ppkt_size(p));
+    CHECK(2 == ppkt_size(tail));
+
+    for (int i = 0; i < 3; i++)
+    {
+        CHECK(i == ppkt_payload(p)[i]);
+    }
+    for (int i = 0; i < 2; i++)
+    {
+        CHECK(i + 3 == ppkt_payload(tail)[i]);
+    }
+}
+
+TEST(ppkt, split_in_second)
+{
+    struct ppkt_t *one = ppkt_alloc(5);
+    struct ppkt_t *two = ppkt_alloc(5);
+
+    for (int i = 0; i < 5; i++)
+    {
+        ppkt_payload(one)[i] = i;
+        ppkt_payload(two)[i] = 5 + i;
+    }
+    struct ppkt_t *chain = ppkt_prefix_header(one, two);
+
+    struct ppkt_t *tail;
+    ppkt_split(chain, &tail, 7);
+
+    CHECK(tail);
+    CHECK(2 == ppkt_chain_count(chain));
+    CHECK(1 == ppkt_chain_count(tail));
+    CHECK(7 == ppkt_chain_size(chain));
+    CHECK(3 == ppkt_chain_size(tail));
+
+    CHECK(6 == ppkt_payload(ppkt_next(chain))[1]);
+    CHECK(7 == ppkt_payload(tail)[0]);
+}
+
+TEST(ppkt, split_between_packets)
+{
+    struct ppkt_t *one = ppkt_alloc(5);
+    struct ppkt_t *two = ppkt_alloc(5);
+
+    for (int i = 0; i < 5; i++)
+    {
+        ppkt_payload(one)[i] = i;
+        ppkt_payload(two)[i] = 5 + i;
+    }
+    struct ppkt_t *chain = ppkt_prefix_header(one, two);
+
+    struct ppkt_t *tail;
+    ppkt_split(chain, &tail, 5);
+
+    CHECK(tail);
+    CHECK(5 == ppkt_size(chain));
+    CHECK(5 == ppkt_size(tail));
+    CHECK(1 == ppkt_chain_count(chain));
+    CHECK(1 == ppkt_chain_count(tail));
+
+    for (int i = 0; i < 5; i++)
+    {
+        CHECK(i == ppkt_payload(chain)[i]);
+        CHECK(i + 5 == ppkt_payload(tail)[i]);
+    }
+}
