@@ -119,6 +119,22 @@ struct ppkt_t *ppkt_coalesce(struct ppkt_t *p, size_t size)
     return new;
 }
 
+static void ppkt_split_ppkt(struct ppkt_t *front, struct ppkt_t **back, size_t cut)
+{
+    assert(front);
+    assert(back);
+    assert(cut < ppkt_size(front));
+
+    struct ppkt_t *new = ppkt_alloc(ppkt_size(front) - cut);
+    memcpy(ppkt_payload(new), ppkt_payload(front) + cut, ppkt_size(front) - cut);
+
+    ppkt_cut(front, ppkt_size(front) - cut);
+
+    new->next = front->next;
+    *back = new;
+    front->next = NULL;
+}
+
 void ppkt_split(struct ppkt_t *front, struct ppkt_t **back, size_t cut)
 {
     assert(front);
@@ -126,25 +142,24 @@ void ppkt_split(struct ppkt_t *front, struct ppkt_t **back, size_t cut)
 
     struct ppkt_t *it = front;
     size_t offset = 0;
-    while (it)
+
+    while ((offset + ppkt_size(it)) < cut)
     {
-        size_t pkt_size = ppkt_size(it);
-
-        if (offset + pkt_size >= cut)
-        {
-            *back = it->next;
-            size_t diff = cut - (offset + pkt_size);
-            if (*back)
-                ppkt_pull(*back, diff);
-            assert(it->size >= diff);
-            it->size -= diff;
-            return;
-        }
-
-        it = it->next;
         offset += ppkt_size(it);
+        it = it->next;
+        assert(it); // I.e. our chain is at least 'cut' long
     }
-    assert(0);
+
+    if ((offset + ppkt_size(it)) == cut)
+    {
+        // Simple case, we can cut the chain between the packets
+        *back = it->next;
+        it->next = NULL;
+        return;
+    }
+    assert(offset < cut);
+
+    ppkt_split_ppkt(it, back, cut - offset);
 }
 
 uint8_t* ppkt_payload(struct ppkt_t *p)
