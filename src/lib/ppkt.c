@@ -224,8 +224,7 @@ void ppkt_pull(struct ppkt_t *p, size_t size)
 void ppkt_cut(struct ppkt_t *p, size_t size)
 {
     assert(p);
-    assert(! p->next); // Doesn't support chains yet
-    assert(size <= ppkt_size(p));
+    assert(size <= ppkt_size(p)); // Doesn't support chains yet
 
     p->size -= size;
 }
