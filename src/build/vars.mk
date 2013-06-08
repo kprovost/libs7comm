@@ -18,12 +18,8 @@ module_includes = $(addprefix -I, $($(_module)_includes))
 module_cflags = $($(module)_cflags)
 module_ldflags = $($(module)_ldflags)
 
-CFLAGS = -g -Wall -Werror \
-		 -std=gnu99 \
-		 $(module_includes) \
-		 $(module_cflags)
+COMMON_FLAGS = -g -Wall -Werror $(module_includes)
 
-CPPFLAGS = -g -Wall -Werror \
-		 $(module_includes)
-
+CFLAGS = $(COMMON_FLAGS) -std=gnu99 $(module_cflags)
+CPPFLAGS = $(COMMON_FLAGS)
 LDFLAGS = $(module_ldflags)
