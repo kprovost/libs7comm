@@ -7,6 +7,7 @@ typedef enum
     ERR_NO_MEM,
     ERR_SEND_FAILED,
     ERR_CONNECTION_CLOSED,
+    ERR_NOT_SUPPORTED,
     ERR_UNKNOWN
 } err_t;
 #define OK(x) (x == ERR_NONE)
