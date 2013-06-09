@@ -74,6 +74,8 @@ static void pcap_receive_tcp(struct pcap_dev_t *dev, struct ppkt_t *p)
 
     if (src_port == 102)
         dev->receive(p, dev->user);
+    else
+        ppkt_free(p);
 }
 
 static void pcap_receive_ipv4(struct pcap_dev_t *dev, struct ppkt_t *p)

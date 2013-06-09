@@ -209,6 +209,8 @@ static err_t analyze_receive(struct ppkt_t *p, void *user)
     printf("Packet:\n");
     dump_bytes(ppkt_payload(p), ppkt_size(p));
 
+    ppkt_free(p);
+
     return ERR_NONE;
 }
 
