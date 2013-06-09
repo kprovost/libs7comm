@@ -53,7 +53,10 @@ static void pcap_receive_tcp(struct pcap_dev_t *dev, struct ppkt_t *p)
     assert(p);
 
     if (ppkt_size(p) < sizeof(struct tcphdr))
+    {
+        ppkt_free(p);
         return;
+    }
 
     struct tcphdr *tcph = (struct tcphdr*)ppkt_payload(p);
     uint16_t src_port = ntohs(tcph->source);
@@ -63,8 +66,11 @@ static void pcap_receive_tcp(struct pcap_dev_t *dev, struct ppkt_t *p)
     ppkt_pull(p, hdr_len);
 
     if (ppkt_size(p) == 0)
+    {
         // ACK packet?
+        ppkt_free(p);
         return;
+    }
 
     if (src_port == 102)
         dev->receive(p, dev->user);
@@ -77,7 +83,10 @@ static void pcap_receive_ipv4(struct pcap_dev_t *dev, struct ppkt_t *p)
 
     size_t size = ppkt_size(p);
     if (size < sizeof(struct iphdr))
+    {
+        ppkt_free(p);
         return;
+    }
 
     struct iphdr *iph = (struct iphdr*)ppkt_payload(p);
     assert(iph->version == 4);
@@ -87,8 +96,11 @@ static void pcap_receive_ipv4(struct pcap_dev_t *dev, struct ppkt_t *p)
     uint16_t tot_len = ntohs(iph->tot_len);
 
     if (tot_len > size)
+    {
         // Invalid packet!
+        ppkt_free(p);
         return;
+    }
 
     ppkt_pull(p, header_len);
 
