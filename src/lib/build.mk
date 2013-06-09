@@ -2,7 +2,6 @@ include $(topdir)/build/head.mk
 
 lib_srcs := \
 	pcap.c \
-	pdu.c \
 	ppkt.c \
 	profinet.c \
 	tcp.c  \
