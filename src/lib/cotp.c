@@ -133,6 +133,14 @@ void cotp_disconnect(struct cotp_dev_t *dev)
     free(dev);
 }
 
+err_t cotp_send(struct cotp_dev_t *dev, struct ppkt_t *p)
+{
+    assert(dev);
+    assert(p);
+
+    return ERR_NONE;
+}
+
 err_t cotp_poll(struct cotp_dev_t *dev)
 {
     assert(dev);
