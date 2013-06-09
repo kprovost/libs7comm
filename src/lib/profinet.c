@@ -1,17 +1,42 @@
 #include "profinet.h"
 #include "profinet_types.h"
 #include "ppkt.h"
-#include "pdu.h"
+#include "cotp.h"
 
 #include <assert.h>
+#include <stdlib.h>
 #include <arpa/inet.h>
 
-struct profinet_dev* profinet_connect(const char *plc_addr)
+struct profinet_dev_t
 {
-    return NULL;
+    struct cotp_dev_t *cotpdev;
+};
+
+static err_t profinet_receive(struct ppkt_t *p, void *user)
+{
+    assert(p);
+
+    ppkt_free(p);
+    return ERR_NONE;
 }
 
-void profinet_disconnect(struct profinet_dev *dev)
+struct profinet_dev_t* profinet_connect(const char *addr)
+{
+    assert(addr);
+
+    struct profinet_dev_t *dev = malloc(sizeof(struct profinet_dev_t));
+
+    dev->cotpdev = cotp_connect(addr, profinet_receive, dev);
+    if (! dev->cotpdev)
+    {
+        free(dev);
+        dev = NULL;
+    }
+
+    return dev;
+}
+
+void profinet_disconnect(struct profinet_dev_t *dev)
 {
     assert(dev);
 }
@@ -27,7 +52,7 @@ static err_t profinet_create_read_request(int db, int number, struct ppkt_t **p)
     return ERR_NONE;
 }
 
-err_t profinet_read_word(struct profinet_dev *dev, int db, int number, uint16_t *value)
+err_t profinet_read_word(struct profinet_dev_t *dev, int db, int number, uint16_t *value)
 {
     assert(dev);
     assert(value);
@@ -46,14 +71,11 @@ err_t profinet_read_word(struct profinet_dev *dev, int db, int number, uint16_t 
     req->area_code = profinet_area_DB;
     req->start_addr = htons(number);
 
-    err = profinet_pdu_send(dev, &p);
+    err = cotp_send(dev->cotpdev, p);
     if (! OK(err))
-        goto exit;
+        return err;
 
     // TODO wait for and parse reply
-
-exit:
-    ppkt_free(p);
 
     return err;
 }

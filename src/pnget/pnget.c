@@ -2,11 +2,12 @@
 #include <stdint.h>
 #include <string.h>
 #include <errno.h>
+#include <unistd.h>
 #include "profinet.h"
 
 int main(int argc, char **argv)
 {
-    struct profinet_dev *dev = profinet_connect("10.0.3.9");
+    struct profinet_dev_t *dev = profinet_connect("10.0.3.9");
     if (! dev)
     {
         printf("Failed to connect: %s (%d)\n", strerror(errno), errno);
