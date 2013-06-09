@@ -36,7 +36,7 @@ struct cotphdr_connect_t
 struct cotphdr_data_t
 {
     struct cotphdr_common_t common;
-    uint8_t flags;
+    uint8_t number;
 } __attribute__((packed));
 
 static err_t cotp_receive_connect_confirm(struct cotp_dev_t *dev, struct ppkt_t *p)
@@ -46,7 +46,26 @@ static err_t cotp_receive_connect_confirm(struct cotp_dev_t *dev, struct ppkt_t 
 
 static err_t cotp_receive_data(struct cotp_dev_t *dev, struct ppkt_t *p)
 {
-    return ERR_NONE;
+    assert(dev);
+    assert(p);
+    assert(dev->receive);
+
+    size_t size = ppkt_chain_size(p);
+
+    assert(size >= sizeof(struct cotphdr_data_t));
+
+    p = ppkt_coalesce(p, sizeof(struct cotphdr_data_t));
+    struct cotphdr_data_t *data = (struct cotphdr_data_t*)ppkt_payload(p);
+
+    assert(data->common.size == 2); // Data usually doesn't get additional header fields
+    assert(sizeof(struct cotphdr_data_t) == 3);
+
+    // We don't support cotp fragmentation (yet)
+    assert(data->number & 0x80); // 0x80 means this is the data unit. 
+
+    ppkt_pull(p, sizeof(struct cotphdr_data_t));
+
+    return dev->receive(p, dev->user);
 }
 
 static err_t cotp_receive(struct ppkt_t *p, void *user)
