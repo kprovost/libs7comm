@@ -122,7 +122,7 @@ err_t tpkt_send(struct tpkt_dev_t *dev, struct ppkt_t *p)
 
     tpkthdr->version = 3;
     tpkthdr->reserved = 0;
-    tpkthdr->size = ppkt_chain_size(p);
+    tpkthdr->size = htons(ppkt_chain_size(p));
 
     p = ppkt_prefix_header(hdr, p);
 
