@@ -16,3 +16,6 @@ pnget/pnget: $(PNGET_OBJS)
 analysis/analyze: $(ANALYSIS_OBJS)
 
 test/tests: $(TEST_OBJS) lib/libprofinet.so
+
+# Dependencies
+-include $(addsuffix .d, $(OBJS))

@@ -1,10 +1,6 @@
 # Don't delete intermediate files
 .SECONDARY:
 
-# Dependencies
--include $(addsuffix .d,$(OBJS))
-
-
 ifeq ($(V),1)
 Q=
 else
