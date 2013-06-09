@@ -7,7 +7,7 @@
 #include <linux/ip.h>
 #include <linux/tcp.h>
 
-#include "tpkt.h"
+#include "cotp.h"
 #include <profinet_types.h>
 #include <profinet_debug.h>
 
@@ -211,7 +211,7 @@ static err_t analyze_receive(struct ppkt_t *p, void *user)
 
 int main(int argc, char** argv)
 {
-    struct tpkt_dev_t *pdev;
+    struct cotp_dev_t *pdev;
 
     if (argc < 2)
     {
@@ -219,15 +219,20 @@ int main(int argc, char** argv)
         return 1;
     }
 
-    pdev = tpkt_connect(argv[1], &analyze_receive, NULL);
+    pdev = cotp_connect(argv[1], &analyze_receive, NULL);
+    if (! pdev)
+    {
+        printf("Unable to open %s\n", argv[1]);
+        return 1;
+    }
 
     err_t err = ERR_NONE;
     do
     {
-        err = tpkt_poll(pdev);
+        err = cotp_poll(pdev);
     } while (OK(err));
 
-    tpkt_disconnect(pdev);
+    cotp_disconnect(pdev);
 
     return 0;
 }
