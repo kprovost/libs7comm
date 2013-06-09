@@ -6,6 +6,7 @@
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
+#include <linux/tcp.h>
 #include <unistd.h>
 #include <string.h>
 #include <assert.h>
@@ -46,6 +47,11 @@ struct tcp_dev_t* tcp_connect(const char *addr, uint16_t port, ppkt_receive_func
 
     int ret = connect(dev->fd, (struct sockaddr*)&in,
             sizeof(struct sockaddr_in));
+    if (ret == -1)
+        goto error;
+
+    int flag = 1;
+    ret = setsockopt(dev->fd, IPPROTO_TCP, TCP_NODELAY, &flag, sizeof(int));
     if (ret == -1)
         goto error;
 
