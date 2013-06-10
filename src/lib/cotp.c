@@ -5,11 +5,19 @@
 #include <stdlib.h>
 #include <arpa/inet.h>
 
+enum cotp_state_t
+{
+    COTP_STATE_DISCONNECTED,
+    COTP_STATE_CONNECTING,
+    COTP_STATE_CONNECTED,
+};
+
 struct cotp_dev_t
 {
     ppkt_receive_function_t receive;
     struct tpkt_dev_t *tpkt;
     void *user;
+    enum cotp_state_t state;
 };
 
 enum cotp_tpdu_code_t
@@ -48,6 +56,22 @@ struct cotphdr_data_t
 
 static err_t cotp_receive_connect_confirm(struct cotp_dev_t *dev, struct ppkt_t *p)
 {
+    assert(dev);
+    assert(p);
+
+    size_t size = ppkt_chain_size(p);
+    assert(size >= sizeof(struct cotphdr_connect_t));
+
+    p = ppkt_coalesce(p, size);
+
+    struct cotphdr_connect_t *conn = (struct cotphdr_connect_t*)ppkt_payload(p);
+    assert(conn->flags == 0);
+
+    assert(dev->state == COTP_STATE_CONNECTING);
+    dev->state = COTP_STATE_CONNECTED;
+
+    ppkt_free(p);
+
     return ERR_NONE;
 }
 
@@ -146,6 +170,7 @@ struct cotp_dev_t* cotp_connect(const char *addr, ppkt_receive_function_t receiv
     dev->receive = receive;
     dev->user = user;
     dev->tpkt = tpkt_connect(addr, cotp_receive, dev);
+    dev->state = COTP_STATE_CONNECTING;
     if (! dev->tpkt)
     {
         free(dev);
@@ -174,7 +199,15 @@ struct cotp_dev_t* cotp_connect(const char *addr, ppkt_receive_function_t receiv
         return NULL;
     }
 
-    // TODO Wait for connect response
+    while (dev->state != COTP_STATE_CONNECTED)
+    {
+        err_t err = tpkt_poll(dev->tpkt);
+        if (! OK(err))
+        {
+            cotp_disconnect(dev);
+            return NULL;
+        }
+    }
 
     return dev;
 }
