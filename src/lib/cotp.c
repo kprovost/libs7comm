@@ -19,6 +19,13 @@ enum cotp_tpdu_code_t
     COTP_TPDU_DATA            = 0xF0,
 };
 
+enum cotp_param_t
+{
+    COTP_PARAM_SRC_TSAP  = 0xC1,
+    COTP_PARAM_DST_TSAP  = 0xC2,
+    COTP_PARAM_TPDU_SIZE = 0xC0,
+};
+
 struct cotphdr_common_t
 {
     uint8_t size;
@@ -99,6 +106,34 @@ static err_t cotp_receive(struct ppkt_t *p, void *user)
     }
 }
 
+static void cotp_append_option(struct ppkt_t *p, enum cotp_param_t type, size_t size, uint32_t value)
+{
+    assert(p);
+
+    struct ppkt_t *option = ppkt_alloc(2 + size);
+
+    uint8_t *bytes = ppkt_payload(option);
+
+    *bytes++ = type;
+    *bytes++ = size;
+
+    switch (size)
+    {
+        case 4:
+            *bytes++ = value >> 24;
+            *bytes++ = (value >> 16) & 0xff;
+        case 2:
+            *bytes++ = (value >> 8) & 0xff;
+        case 1:
+            *bytes++ = value & 0xff;
+            break;
+        default:
+            assert(0);
+    }
+
+    ppkt_append_footer(option, p);
+}
+
 struct cotp_dev_t* cotp_connect(const char *addr, ppkt_receive_function_t receive, void *user)
 {
     assert(addr);
@@ -117,7 +152,29 @@ struct cotp_dev_t* cotp_connect(const char *addr, ppkt_receive_function_t receiv
         return NULL;
     }
 
-    // TODO Send out connect message (and wait for reply??)
+    // Send out connect message
+    struct ppkt_t *p = ppkt_alloc(sizeof(struct cotphdr_connect_t));
+
+    struct cotphdr_connect_t *conn = (struct cotphdr_connect_t*)ppkt_payload(p);
+    conn->common.tpdu_code = COTP_TPDU_CONNECT_REQUEST;
+    conn->dst_ref = htons(0);
+    conn->src_ref = htons(1);
+    conn->flags = 0;
+
+    cotp_append_option(p, COTP_PARAM_SRC_TSAP, 2, 0x100);
+    cotp_append_option(p, COTP_PARAM_DST_TSAP, 2, 0x102);
+    cotp_append_option(p, COTP_PARAM_TPDU_SIZE, 1, 9); // 512
+
+    conn->common.size = ppkt_chain_size(p) - 1;
+
+    err_t err = tpkt_send(dev->tpkt, p);
+    if (! OK(err))
+    {
+        cotp_disconnect(dev);
+        return NULL;
+    }
+
+    // TODO Wait for connect response
 
     return dev;
 }
