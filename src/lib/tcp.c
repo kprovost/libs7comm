@@ -3,6 +3,7 @@
 #include <stddef.h>
 #include <stdlib.h>
 #include <netdb.h>
+#include <poll.h>
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
@@ -108,6 +109,32 @@ err_t tcp_send(struct tcp_dev_t *dev, struct ppkt_t *p)
 err_t tcp_poll(struct tcp_dev_t *dev)
 {
     assert(dev);
-    assert(0); // Not implemented yet
-    return ERR_UNKNOWN;
+
+    struct pollfd pfd = {
+        .fd = dev->fd,
+        .events = POLLIN
+    };
+    int ret = poll(&pfd, 1, -1);
+    assert(ret >= 0);
+
+    if (! pfd.revents)
+        return ERR_TIMEOUT;
+
+    if (pfd.revents & (POLLHUP | POLLERR))
+        return ERR_CONNECTION_CLOSED;
+
+    struct ppkt_t *p = ppkt_alloc(512);
+
+    ret = recv(dev->fd, ppkt_payload(p), ppkt_size(p), 0);
+    if (ret <= 0)
+    {
+        ppkt_free(p);
+        return ERR_RECV_FAILED;
+    }
+
+    // Ensure the ppkt size matches the real data size
+    ppkt_cut(p, ppkt_size(p) - ret);
+    assert(ppkt_size(p) == ret);
+
+    return dev->receive(p, dev->user);
 }
