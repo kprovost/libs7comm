@@ -10,7 +10,7 @@ follow.
 
 Objectives
 ----------
-To be able to read and write variables from/to a Siemens S7.
+To be able to read and write variables from/to a Siemens S7-300.
 
 Target audience
 ---------------
