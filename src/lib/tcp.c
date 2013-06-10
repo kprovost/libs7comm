@@ -15,9 +15,10 @@ struct tcp_dev_t
 {
     int fd;
     ppkt_receive_function_t receive;
+    void *user;
 };
 
-struct tcp_dev_t* tcp_connect(const char *addr, uint16_t port, ppkt_receive_function_t receive)
+struct tcp_dev_t* tcp_connect(const char *addr, uint16_t port, ppkt_receive_function_t receive, void *user)
 {
     assert(addr);
     assert(receive);
@@ -37,6 +38,8 @@ struct tcp_dev_t* tcp_connect(const char *addr, uint16_t port, ppkt_receive_func
         return NULL;
 
     dev->fd = socket(AF_INET, SOCK_STREAM, 0);
+    dev->user = user;
+    dev->receive = receive;
     if (dev->fd == -1)
         goto error;
 

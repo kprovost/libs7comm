@@ -82,7 +82,7 @@ struct tpkt_dev_t* tpkt_connect(const char *addr, ppkt_receive_function_t receiv
     dev->pcap = pcap_connect(addr, tpkt_receive, dev);
     if (! dev->pcap)
     {
-        dev->tcp = tcp_connect(addr, TPKT_PORT, tpkt_receive);
+        dev->tcp = tcp_connect(addr, TPKT_PORT, tpkt_receive, dev);
 
         if (! dev->tcp)
         {
