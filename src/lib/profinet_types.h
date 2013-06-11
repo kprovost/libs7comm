@@ -3,13 +3,6 @@
 
 #include <stdint.h>
 
-#define PROFINET_PORT 102
-
-#define PROFINET_ISO_PROTOCOL 0x03
-
-#define PROFINET_ISO_FUNCTION_PDU_TRANSPORT 0xf0
-#define PROFINET_ISO_FUNCTION_CONNECT       0xe0
-
 enum profinet_function_t
 {
     profinet_function_open_connection  = 0xf0,
@@ -44,17 +37,6 @@ enum profinet_area_t
     profinet_area_Timer200    = 0x1f,  /* IEC timers (200 family) */
     profinet_area_RawMemoryS5 = 0      /* just the raw memory */
 };
-
-struct profinet_iso_header
-{
-    uint8_t prot;
-    uint8_t ch1;
-    uint8_t ch2;
-    uint8_t len;
-    uint8_t xxxx1;
-    uint8_t func;
-    uint8_t xxxx2;
-} __attribute__((packed));
 
 struct profinet_ibh_header
 {
