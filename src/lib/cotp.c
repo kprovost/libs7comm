@@ -34,6 +34,8 @@ enum cotp_param_t
     COTP_PARAM_TPDU_SIZE = 0xC0,
 };
 
+#define COTP_NUMBER_FINAL_FRAME 0x80
+
 struct cotphdr_common_t
 {
     uint8_t size;
@@ -88,11 +90,10 @@ static err_t cotp_receive_data(struct cotp_dev_t *dev, struct ppkt_t *p)
     p = ppkt_coalesce(p, sizeof(struct cotphdr_data_t));
     struct cotphdr_data_t *data = (struct cotphdr_data_t*)ppkt_payload(p);
 
-    assert(data->common.size == 2); // Data usually doesn't get additional header fields
-    assert(sizeof(struct cotphdr_data_t) == 3);
+    assert(data->common.size == sizeof(struct cotphdr_data_t) - 1);
 
     // We don't support cotp fragmentation (yet)
-    assert(data->number & 0x80); // 0x80 means this is the data unit. 
+    assert(data->number & COTP_NUMBER_FINAL_FRAME);
 
     ppkt_pull(p, sizeof(struct cotphdr_data_t));
 
@@ -226,9 +227,20 @@ void cotp_disconnect(struct cotp_dev_t *dev)
 err_t cotp_send(struct cotp_dev_t *dev, struct ppkt_t *p)
 {
     assert(dev);
+    assert(dev->tpkt);
+    assert(dev->state == COTP_STATE_CONNECTED);
     assert(p);
 
-    return ERR_NONE;
+    struct ppkt_t *hdr = ppkt_alloc(sizeof(struct cotphdr_data_t));
+    struct cotphdr_data_t *datahdr = (struct cotphdr_data_t*)ppkt_payload(hdr);
+
+    datahdr->common.size = sizeof(struct cotphdr_data_t) - 1;
+    datahdr->common.tpdu_code = COTP_TPDU_DATA;
+    datahdr->number = COTP_NUMBER_FINAL_FRAME;
+
+    p = ppkt_prefix_header(hdr, p);
+
+    return tpkt_send(dev->tpkt, p);
 }
 
 err_t cotp_poll(struct cotp_dev_t *dev)
