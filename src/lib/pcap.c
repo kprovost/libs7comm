@@ -60,6 +60,7 @@ static void pcap_receive_tcp(struct pcap_dev_t *dev, struct ppkt_t *p)
 
     struct tcphdr *tcph = (struct tcphdr*)ppkt_payload(p);
     uint16_t src_port = ntohs(tcph->source);
+    uint16_t dst_port = ntohs(tcph->dest);
     int hdr_len = tcph->doff * 4;
     assert(hdr_len >= sizeof(struct tcphdr));
 
@@ -72,7 +73,7 @@ static void pcap_receive_tcp(struct pcap_dev_t *dev, struct ppkt_t *p)
         return;
     }
 
-    if (src_port == 102)
+    if (src_port == 102 || dst_port == 102)
         dev->receive(p, dev->user);
     else
         ppkt_free(p);
