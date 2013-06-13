@@ -71,7 +71,7 @@ err_t profinet_read_word(struct profinet_dev_t *dev, int db, int number, uint16_
 
     struct ppkt_t *hdr = profinet_create_read_request_hdr();
 
-    struct ppkt_t *p = ppkt_alloc(sizeof(struct profinet_read_request_t*));
+    struct ppkt_t *p = ppkt_alloc(sizeof(struct profinet_read_request_t));
     struct profinet_read_request_t *req = (struct profinet_read_request_t*)ppkt_payload(p);
 
     req->prefix = htons(0x120a); // TODO
