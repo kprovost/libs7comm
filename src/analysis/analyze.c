@@ -202,6 +202,75 @@ static void dump_bytes(const uint8_t *bytes, size_t size)
         printf("\n");
 }
 
+static void dump_profinet_function(const enum profinet_function_t function)
+{
+    printf("Function: ");
+    switch (function)
+    {
+        case profinet_function_open_connection:
+            printf("open connection");
+            break;
+        case profinet_function_read:
+            printf("read");
+            break;
+        case profinet_function_write:
+            printf("write");
+            break;
+        case profinet_function_download_request:
+            printf("download request");
+            break;
+        case profinet_function_download_block:
+            printf("download block");
+            break;
+        case profinet_function_download_ended:
+            printf("download ended");
+            break;
+        case profinet_function_upload_start:
+            printf("upload start");
+            break;
+        case profinet_function_upload:
+            printf("upload");
+            break;
+        case profinet_function_upload_end:
+            printf("upload end");
+            break;
+        case profinet_function_insert_block:
+            printf("insert block");
+            break;
+        default:
+            printf("unknown function 0x%02x", function);
+    }
+    printf("\n");
+}
+
+static void dump_profinet_read_response(struct ppkt_t *p, size_t plen, size_t dlen)
+{
+    assert(p);
+    assert(dlen > 0);
+
+    uint32_t *prefix = (uint32_t*)ppkt_payload(p);
+    assert(*prefix == htonl(0xff040000));
+
+    ppkt_pull(p, 4);
+    assert(dlen == ppkt_size(p));
+    dump_bytes(ppkt_payload(p), dlen);
+}
+
+static void dump_profinet_read_request(struct ppkt_t *p, size_t plen, size_t dlen)
+{
+    assert(p);
+
+    assert(plen == 14);  // Full request (incl. function/empty byte!)
+    struct profinet_read_request_t *req = (struct profinet_read_request_t*)ppkt_payload(p);
+
+    printf("Read size: %s\n", (req->read_size == 1 ? "bit" : (req->read_size == 2 ? "byte" : "word")));
+    printf("read_length: %d bytes\n", ntohs(req->read_length));
+    printf("DB: %d\n", ntohs(req->db_num));
+    printf("Area: %s\n", profinet_area_to_string(req->area_code));
+    uint32_t start_addr = (req->start_addr << 24) | ntohs(req->start_addr_2);
+    printf("Start addr: 0x%06x\n", start_addr);
+}
+
 static err_t analyze_receive(struct ppkt_t *p, void *user)
 {
     assert(p);
@@ -209,6 +278,50 @@ static err_t analyze_receive(struct ppkt_t *p, void *user)
     printf("Packet:\n");
     dump_bytes(ppkt_payload(p), ppkt_size(p));
 
+    if (ppkt_size(p) < sizeof(struct profinet_hdr_t))
+        goto done;
+
+    struct profinet_hdr_t *hdr = (struct profinet_hdr_t*)ppkt_payload(p);
+    assert(hdr->version == 0x32);
+
+    printf("msgtype: %d\n", hdr->msgtype);
+    assert(hdr->zero == 0);
+    printf("seq: %d\n", ntohs(hdr->seq));
+    printf("parameter len: %d\n", ntohs(hdr->plen));
+    printf("data len: %d\n", ntohs(hdr->dlen));
+
+    size_t seek = sizeof(struct profinet_hdr_t);
+    if (hdr->msgtype == 2 || hdr->msgtype == 3)
+        seek += 2; // Result field.
+
+    if (ppkt_size(p) <= seek)
+        goto done;
+
+    ppkt_pull(p, seek);
+
+    if (ppkt_size(p) < sizeof(struct profinet_request_t))
+        goto done;
+
+    struct profinet_request_t *req = (struct profinet_request_t*)ppkt_payload(p);
+    dump_profinet_function(req->function);
+
+    ppkt_pull(p, sizeof(struct profinet_request_t));
+
+    uint16_t plen = ntohs(hdr->plen);
+    uint16_t dlen = ntohs(hdr->dlen);
+    if (req->function == profinet_function_read)
+    {
+        if (plen == 14)
+            dump_profinet_read_request(p, plen, dlen);
+        else if (plen == 2)
+            dump_profinet_read_response(p, plen, dlen);
+        else
+            printf("Unknown read function packet\n");
+    }
+
+    printf("==================================================\n");
+
+done:
     ppkt_free(p);
 
     return ERR_NONE;

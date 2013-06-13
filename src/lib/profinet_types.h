@@ -58,14 +58,33 @@ struct profinet_pdu_header
     uint16_t res;
 } __attribute__((packed));
 
-struct profinet_request
+#define PROFINET_VERSION 0x32
+
+struct profinet_hdr_t
+{
+    /* Profint common header */
+    uint8_t version; // Always 0x32
+    uint8_t msgtype; // 1, 2, 3, or 7. Type 2 and 3 are two bytes longer (see result)
+    uint16_t zero;
+    uint16_t seq;
+    uint16_t plen; // Length of parameters after this header
+    uint16_t dlen; // Length of data after this header
+
+    //uint16_t result; // Optional, only in type 2 and 3 headers
+};
+
+struct profinet_request_t
 {
     uint8_t function;
-    uint8_t unknown3;
+    uint8_t unknown;
+};
+
+struct profinet_read_request_t
+{
     uint16_t prefix;
-    uint8_t unknown4;
+    uint8_t unknown;
     uint8_t read_size;
-    uint16_t bytes;
+    uint16_t read_length;
     uint16_t db_num;
     uint8_t area_code;
     uint8_t start_addr; /* start */
