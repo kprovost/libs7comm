@@ -52,7 +52,7 @@ struct ppkt_t* profinet_create_read_request_hdr()
     hdr->msgtype = 1;
     hdr->zero = 0;
     hdr->seq = 0;
-    hdr->plen = htons(sizeof(struct profinet_read_request_t) - sizeof(struct profinet_request_t));
+    hdr->plen = htons(sizeof(struct profinet_read_request_t) + sizeof(struct profinet_request_t));
     hdr->dlen = 0;
 
     struct ppkt_t *r = ppkt_alloc(sizeof(struct profinet_request_t));
