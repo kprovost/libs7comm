@@ -61,7 +61,10 @@ struct ppkt_t *ppkt_prefix_header(struct ppkt_t *hdr, struct ppkt_t *p)
     assert(hdr);
     assert(p != hdr);
 
-    hdr->next = p;
+    struct ppkt_t *it = hdr;
+    while (it->next) it = it->next;
+
+    it->next = p;
     return hdr;
 }
 

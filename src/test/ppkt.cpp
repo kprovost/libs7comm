@@ -46,6 +46,21 @@ TEST(ppkt, prefix)
     ppkt_free(new_chain);
 }
 
+TEST(ppkt, prefix_chain)
+{
+    struct ppkt_t *a = ppkt_alloc(1);
+    struct ppkt_t *b = ppkt_alloc(2);
+    struct ppkt_t *c = ppkt_alloc(3);
+
+    struct ppkt_t *hdr = ppkt_prefix_header(a, b);
+
+    struct ppkt_t *final = ppkt_prefix_header(hdr, c);
+
+    CHECK(1 == ppkt_size(final));
+    CHECK(2 == ppkt_size(ppkt_next(final)));
+    CHECK(3 == ppkt_size(ppkt_next(ppkt_next(final))));
+}
+
 TEST(ppkt, append)
 {
     struct ppkt_t *p = ppkt_alloc(10);
