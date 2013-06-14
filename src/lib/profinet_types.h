@@ -71,13 +71,20 @@ struct profinet_hdr_t
     uint16_t dlen; // Length of data after this header
 
     //uint16_t result; // Optional, only in type 2 and 3 headers
-};
+} __attribute__((packed));
 
 struct profinet_request_t
 {
     uint8_t function;
     uint8_t unknown;
-};
+} __attribute__((packed));
+
+struct profinet_open_connection_t
+{
+    uint16_t unknown1;
+    uint16_t unknown2;
+    uint16_t unknown3;
+} __attribute__((packed));
 
 struct profinet_read_request_t
 {
