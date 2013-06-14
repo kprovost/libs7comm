@@ -10,17 +10,21 @@
 struct profinet_dev_t
 {
     struct cotp_dev_t *cotpdev;
+    uint16_t seq;
 };
 
-struct ppkt_t* profinet_create_request_hdr(enum profinet_function_t function, size_t payload_size)
+struct ppkt_t* profinet_create_request_hdr(struct profinet_dev_t *dev,
+        enum profinet_function_t function, size_t payload_size)
 {
+    assert(dev);
+
     struct ppkt_t *p = ppkt_alloc(sizeof(struct profinet_hdr_t));
 
     struct profinet_hdr_t *hdr = (struct profinet_hdr_t*)ppkt_payload(p);
     hdr->version = PROFINET_VERSION;
     hdr->msgtype = 1;
     hdr->zero = 0;
-    hdr->seq = 0;
+    hdr->seq = htons(dev->seq++);
     hdr->plen = htons(payload_size + sizeof(struct profinet_request_t));
     hdr->dlen = 0;
 
@@ -46,7 +50,9 @@ static err_t profinet_open_connection(struct profinet_dev_t *dev)
     assert(dev);
     assert(dev->cotpdev);
 
-    struct ppkt_t *hdr = profinet_create_request_hdr(profinet_function_open_connection, sizeof(struct profinet_open_connection_t));
+    struct ppkt_t *hdr = profinet_create_request_hdr(dev,
+            profinet_function_open_connection,
+            sizeof(struct profinet_open_connection_t));
 
     struct ppkt_t *p = ppkt_alloc(sizeof(struct profinet_open_connection_t));
     struct profinet_open_connection_t *conn = (struct profinet_open_connection_t*)ppkt_payload(p);
@@ -69,6 +75,7 @@ struct profinet_dev_t* profinet_connect(const char *addr)
 
     struct profinet_dev_t *dev = malloc(sizeof(struct profinet_dev_t));
 
+    dev->seq = 0;
     dev->cotpdev = cotp_connect(addr, profinet_receive, dev);
     if (! dev->cotpdev)
     {
@@ -96,7 +103,9 @@ err_t profinet_read_word(struct profinet_dev_t *dev, int db, int number, uint16_
     assert(dev);
     assert(value);
 
-    struct ppkt_t *hdr = profinet_create_request_hdr(profinet_function_read, sizeof(struct profinet_read_request_t));
+    struct ppkt_t *hdr = profinet_create_request_hdr(dev,
+            profinet_function_read,
+            sizeof(struct profinet_read_request_t));
 
     struct ppkt_t *p = ppkt_alloc(sizeof(struct profinet_read_request_t));
     struct profinet_read_request_t *req = (struct profinet_read_request_t*)ppkt_payload(p);
