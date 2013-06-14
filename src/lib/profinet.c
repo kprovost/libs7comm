@@ -63,10 +63,11 @@ static err_t profinet_open_connection(struct profinet_dev_t *dev)
     p = ppkt_prefix_header(hdr, p);
 
     err_t err = cotp_send(dev->cotpdev, p);
+    if (! OK(err))
+        return err;
 
-    // TODO wait for response?
-
-    return err;
+    // TODO: Don't just assume we got the expected response!
+    return cotp_poll(dev->cotpdev);
 }
 
 struct profinet_dev_t* profinet_connect(const char *addr)
@@ -124,7 +125,6 @@ err_t profinet_read_word(struct profinet_dev_t *dev, int db, int number, uint16_
     if (! OK(err))
         return err;
 
-    // TODO wait for and parse reply
-
-    return err;
+    // TODO: Don't just assume we got the expected response!
+    return cotp_poll(dev->cotpdev);
 }
