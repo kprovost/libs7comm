@@ -38,26 +38,6 @@ enum profinet_area_t
     profinet_area_RawMemoryS5 = 0      /* just the raw memory */
 };
 
-struct profinet_ibh_header
-{
-    uint16_t channel;
-    uint8_t len;
-    uint8_t seq;
-    uint16_t sflags;
-    uint16_t rflags;
-} __attribute__((packed));
-
-struct profinet_pdu_header
-{
-    uint8_t unknown;
-    uint8_t version;
-    uint16_t unknown2;
-    uint16_t unknown3;
-    uint16_t plen;
-    uint16_t dlen;
-    uint16_t res;
-} __attribute__((packed));
-
 #define PROFINET_VERSION 0x32
 
 struct profinet_hdr_t
