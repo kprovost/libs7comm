@@ -37,10 +37,53 @@ struct ppkt_t* profinet_create_request_hdr(struct profinet_dev_t *dev,
     return ppkt_prefix_header(p, r);
 }
 
+static void profinet_receive_read(struct profinet_dev_t *dev, struct ppkt_t *p)
+{
+    assert(dev);
+    assert(p);
+}
+
 static err_t profinet_receive(struct ppkt_t *p, void *user)
 {
     assert(p);
+    assert(user);
+    assert(ppkt_chain_count(p) == 1);
 
+    struct profinet_dev_t *dev = (struct profinet_dev_t*)user;
+
+    struct profinet_hdr_t *hdr = (struct profinet_hdr_t*)ppkt_payload(p);
+    uint16_t plen = ntohs(hdr->plen);
+    uint16_t dlen = ntohs(hdr->dlen);
+
+    if (plen < 2)
+        // Short packet?
+        goto done;
+
+    ppkt_pull(p, sizeof(struct profinet_hdr_t));
+
+    if (hdr->msgtype == 2 || hdr->msgtype == 3)
+    {
+        // Result, if we're interested.
+        ppkt_pull(p, 2);
+    }
+
+    struct profinet_request_t *req = (struct profinet_request_t*)ppkt_payload(p);
+    ppkt_pull(p, sizeof(struct profinet_request_t));
+
+    if (ppkt_size(p) < (plen - 2 + dlen))
+        // Invalid packet?
+        goto done;
+
+    switch (req->function)
+    {
+        case profinet_function_open_connection:
+            // Yay, but we don't care about the content
+            break;
+        case profinet_function_read:
+            profinet_receive_read(dev, p);
+    }
+
+done:
     ppkt_free(p);
     return ERR_NONE;
 }
