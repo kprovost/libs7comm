@@ -9,6 +9,7 @@ typedef enum
     ERR_RECV_FAILED,
     ERR_CONNECTION_CLOSED,
     ERR_TIMEOUT,
+    ERR_READ_FAILURE,
     ERR_NOT_SUPPORTED,
     ERR_UNKNOWN
 } err_t;

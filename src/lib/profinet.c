@@ -49,6 +49,11 @@ static err_t profinet_receive_read(struct profinet_dev_t *dev, struct ppkt_t *p)
     if (resp->len_type == 4)
         length >>= 3;
 
+    if (resp->err != 0xff)
+    {
+        ppkt_free(p);
+        return ERR_READ_FAILURE;
+    }
     ppkt_pull(p, sizeof(struct profinet_read_response_t));
     assert(length == ppkt_size(p));
 
@@ -192,7 +197,9 @@ err_t profinet_read_word(struct profinet_dev_t *dev, int db, int number, uint16_
     if (! OK(err))
         return err;
 
-    assert(dev->last_response);
+    if (! dev->last_response)
+        return ERR_READ_FAILURE;
+
     assert(ppkt_size(dev->last_response) == 2);
 
     uint16_t *res = (uint16_t*)ppkt_payload(dev->last_response);
