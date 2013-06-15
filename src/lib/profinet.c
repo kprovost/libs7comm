@@ -1,5 +1,6 @@
 #include "profinet.h"
 #include "profinet_types.h"
+#include "profinet_debug.h"
 #include "ppkt.h"
 #include "cotp.h"
 
@@ -41,6 +42,16 @@ static void profinet_receive_read(struct profinet_dev_t *dev, struct ppkt_t *p)
 {
     assert(dev);
     assert(p);
+
+    struct profinet_read_response_t *resp = (struct profinet_read_response_t*)ppkt_payload(p);
+    uint16_t length = ntohs(resp->len);
+    if (resp->len_type == 4)
+        length >>= 3;
+
+    ppkt_pull(p, sizeof(struct profinet_read_response_t));
+    assert(length == ppkt_size(p));
+
+    dump_bytes(ppkt_payload(p), length);
 }
 
 static err_t profinet_receive(struct ppkt_t *p, void *user)
@@ -158,11 +169,11 @@ err_t profinet_read_word(struct profinet_dev_t *dev, int db, int number, uint16_
 
     req->prefix = htons(0x120a); // TODO
     req->unknown = 0x10;
-    req->read_size = 2;
-    req->read_length = htons(0x0001); // TODO
+    req->read_size = profinet_read_size_word;
+    req->read_length = htons(1); // Number of words to read
     req->db_num = htons(db);
     req->area_code = profinet_area_DB;
-    req->start_addr_2 = htons(number);
+    req->start_addr_2 = htons(number * 8);
 
     p = ppkt_prefix_header(hdr, p);
 

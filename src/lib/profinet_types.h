@@ -66,6 +66,13 @@ struct profinet_open_connection_t
     uint16_t unknown3;
 } __attribute__((packed));
 
+enum profinet_read_size_t
+{
+    profinet_read_size_bit = 1,
+    profinet_read_size_byte = 2,
+    profinet_read_size_word = 4,
+};
+
 struct profinet_read_request_t
 {
     uint16_t prefix;
@@ -77,6 +84,13 @@ struct profinet_read_request_t
     uint8_t start_addr; /* start */
     uint16_t start_addr_2; /* start, part 2, is 3 bytes in total */
 } __attribute__((packed));
+
+struct profinet_read_response_t
+{
+    uint8_t err; // 0xff == OK
+    uint8_t len_type;
+    uint16_t len;
+};
 
 struct profinet_dev
 {
