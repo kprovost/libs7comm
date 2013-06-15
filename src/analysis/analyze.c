@@ -185,23 +185,6 @@ void pcap_parse_tcp(u_char *user, const u_char *bytes, const int len)
                 dst_port, src_port);
 }*/
 
-static void dump_bytes(const uint8_t *bytes, size_t size)
-{
-    size_t i;
-    for (i = 0; i < size; i++)
-    {
-        printf("%02x ", bytes[i]);
-
-        if (i % 8 == 7)
-            printf("  ");
-
-        if (i % 16 == 15)
-            printf("\n");
-    }
-    if (i % 16 != 15)
-        printf("\n");
-}
-
 static void dump_profinet_function(const enum profinet_function_t function)
 {
     printf("Function: ");

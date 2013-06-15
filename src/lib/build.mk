@@ -4,6 +4,7 @@ lib_srcs := \
 	pcap.c \
 	ppkt.c \
 	profinet.c \
+	profinet_debug.c \
 	tcp.c  \
 	tpkt.c \
 	cotp.c
