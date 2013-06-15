@@ -12,6 +12,7 @@ struct profinet_dev_t
 {
     struct cotp_dev_t *cotpdev;
     uint16_t seq;
+    struct ppkt_t *last_response;
 };
 
 struct ppkt_t* profinet_create_request_hdr(struct profinet_dev_t *dev,
@@ -38,7 +39,7 @@ struct ppkt_t* profinet_create_request_hdr(struct profinet_dev_t *dev,
     return ppkt_prefix_header(p, r);
 }
 
-static void profinet_receive_read(struct profinet_dev_t *dev, struct ppkt_t *p)
+static err_t profinet_receive_read(struct profinet_dev_t *dev, struct ppkt_t *p)
 {
     assert(dev);
     assert(p);
@@ -52,6 +53,10 @@ static void profinet_receive_read(struct profinet_dev_t *dev, struct ppkt_t *p)
     assert(length == ppkt_size(p));
 
     dump_bytes(ppkt_payload(p), length);
+    assert(! dev->last_response);
+    dev->last_response = p;
+
+    return ERR_NONE;
 }
 
 static err_t profinet_receive(struct ppkt_t *p, void *user)
@@ -91,7 +96,7 @@ static err_t profinet_receive(struct ppkt_t *p, void *user)
             // Yay, but we don't care about the content
             break;
         case profinet_function_read:
-            profinet_receive_read(dev, p);
+            return profinet_receive_read(dev, p);
     }
 
 done:
@@ -131,6 +136,7 @@ struct profinet_dev_t* profinet_connect(const char *addr)
     struct profinet_dev_t *dev = malloc(sizeof(struct profinet_dev_t));
 
     dev->seq = 0;
+    dev->last_response = NULL;
     dev->cotpdev = cotp_connect(addr, profinet_receive, dev);
     if (! dev->cotpdev)
     {
@@ -182,5 +188,18 @@ err_t profinet_read_word(struct profinet_dev_t *dev, int db, int number, uint16_
         return err;
 
     // TODO: Don't just assume we got the expected response!
-    return cotp_poll(dev->cotpdev);
+    err = cotp_poll(dev->cotpdev);
+    if (! OK(err))
+        return err;
+
+    assert(dev->last_response);
+    assert(ppkt_size(dev->last_response) == 2);
+
+    uint16_t *res = (uint16_t*)ppkt_payload(dev->last_response);
+    *value = ntohs(*res);
+
+    ppkt_free(dev->last_response);
+    dev->last_response = NULL;
+
+    return ERR_NONE;
 }
