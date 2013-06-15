@@ -173,7 +173,7 @@ err_t profinet_read_word(struct profinet_dev_t *dev, int db, int number, uint16_
     req->read_length = htons(1); // Number of words to read
     req->db_num = htons(db);
     req->area_code = profinet_area_DB;
-    req->start_addr_2 = htons(number * 8);
+    req->start_addr_2 = htons(number * 8 * 2);
 
     p = ppkt_prefix_header(hdr, p);
 
