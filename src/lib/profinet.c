@@ -1,6 +1,5 @@
 #include "profinet.h"
 #include "profinet_types.h"
-#include "profinet_debug.h"
 #include "ppkt.h"
 #include "cotp.h"
 
@@ -57,7 +56,6 @@ static err_t profinet_receive_read(struct profinet_dev_t *dev, struct ppkt_t *p)
     ppkt_pull(p, sizeof(struct profinet_read_response_t));
     assert(length == ppkt_size(p));
 
-    dump_bytes(ppkt_payload(p), length);
     assert(! dev->last_response);
     dev->last_response = p;
 
