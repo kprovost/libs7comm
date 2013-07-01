@@ -164,10 +164,13 @@ void profinet_disconnect(struct profinet_dev_t *dev)
     free(dev);
 }
 
-err_t profinet_read_word(struct profinet_dev_t *dev, int db, int number, uint16_t *value)
+static err_t profinet_do_read_request(
+        struct profinet_dev_t *dev,
+        int db,
+        uint32_t start_addr,
+        enum profinet_read_size_t size)
 {
     assert(dev);
-    assert(value);
 
     struct ppkt_t *hdr = profinet_create_request_hdr(dev,
             profinet_function_read,
@@ -178,25 +181,80 @@ err_t profinet_read_word(struct profinet_dev_t *dev, int db, int number, uint16_
 
     req->prefix = htons(0x120a); // TODO
     req->unknown = 0x10;
-    req->read_size = profinet_read_size_word;
+    req->read_size = size;
     req->read_length = htons(1); // Number of words to read
     req->db_num = htons(db);
     req->area_code = profinet_area_DB;
-    req->start_addr_2 = htons(number * 8);
+    req->start_addr = (start_addr & 0x00ff0000) >> 24;
+    req->start_addr_2 = htons(start_addr & 0xffff);
 
     p = ppkt_prefix_header(hdr, p);
+    if (! p)
+        return ERR_NO_MEM;
 
     err_t err = cotp_send(dev->cotpdev, p);
     if (! OK(err))
         return err;
 
-    // TODO: Don't just assume we got the expected response!
     err = cotp_poll(dev->cotpdev);
     if (! OK(err))
         return err;
 
     if (! dev->last_response)
         return ERR_READ_FAILURE;
+
+    return ERR_NONE;
+}
+
+err_t profinet_read_bit(struct profinet_dev_t *dev, int db, int number, bool *value)
+{
+    assert(dev);
+    assert(value);
+
+    uint32_t start_addr = number;
+    err_t err = profinet_do_read_request(dev, db, start_addr, profinet_read_size_bit);
+    if (! OK(err))
+        return err;
+
+    assert(ppkt_size(dev->last_response) == 1);
+
+    *value = *ppkt_payload(dev->last_response);
+
+    ppkt_free(dev->last_response);
+    dev->last_response = NULL;
+
+    return ERR_NONE;
+}
+
+err_t profinet_read_byte(struct profinet_dev_t *dev, int db, int number, uint8_t *value)
+{
+    assert(dev);
+    assert(value);
+
+    uint32_t start_addr = number * 8;
+    err_t err = profinet_do_read_request(dev, db, start_addr, profinet_read_size_byte);
+    if (! OK(err))
+        return err;
+
+    assert(ppkt_size(dev->last_response) == 1);
+
+    *value = *ppkt_payload(dev->last_response);
+
+    ppkt_free(dev->last_response);
+    dev->last_response = NULL;
+
+    return ERR_NONE;
+}
+
+err_t profinet_read_word(struct profinet_dev_t *dev, int db, int number, uint16_t *value)
+{
+    assert(dev);
+    assert(value);
+
+    uint32_t start_addr = number * 8;
+    err_t err = profinet_do_read_request(dev, db, start_addr, profinet_read_size_word);
+    if (! OK(err))
+        return err;
 
     assert(ppkt_size(dev->last_response) == 2);
 
