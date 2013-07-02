@@ -15,7 +15,7 @@ struct profinet_dev_t
 };
 
 struct ppkt_t* profinet_create_request_hdr(struct profinet_dev_t *dev,
-        enum profinet_function_t function, size_t payload_size)
+        enum profinet_function_t function, size_t payload_size, size_t data_size)
 {
     assert(dev);
 
@@ -27,7 +27,7 @@ struct ppkt_t* profinet_create_request_hdr(struct profinet_dev_t *dev,
     hdr->zero = 0;
     hdr->seq = htons(dev->seq++);
     hdr->plen = htons(payload_size + sizeof(struct profinet_request_t));
-    hdr->dlen = 0;
+    hdr->dlen = htons(data_size);
 
     struct ppkt_t *r = ppkt_alloc(sizeof(struct profinet_request_t));
     struct profinet_request_t *req = (struct profinet_request_t*)ppkt_payload(r);
@@ -114,7 +114,7 @@ static err_t profinet_open_connection(struct profinet_dev_t *dev)
 
     struct ppkt_t *hdr = profinet_create_request_hdr(dev,
             profinet_function_open_connection,
-            sizeof(struct profinet_open_connection_t));
+            sizeof(struct profinet_open_connection_t), 0);
 
     struct ppkt_t *p = ppkt_alloc(sizeof(struct profinet_open_connection_t));
     struct profinet_open_connection_t *conn = (struct profinet_open_connection_t*)ppkt_payload(p);
@@ -174,7 +174,7 @@ static err_t profinet_do_read_request(
 
     struct ppkt_t *hdr = profinet_create_request_hdr(dev,
             profinet_function_read,
-            sizeof(struct profinet_read_request_t));
+            sizeof(struct profinet_read_request_t), 0);
 
     struct ppkt_t *p = ppkt_alloc(sizeof(struct profinet_read_request_t));
     struct profinet_read_request_t *req = (struct profinet_read_request_t*)ppkt_payload(p);
