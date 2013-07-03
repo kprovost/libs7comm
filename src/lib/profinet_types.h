@@ -92,6 +92,11 @@ struct profinet_read_response_t
     uint16_t len;
 };
 
+struct profinet_write_response_t
+{
+    uint8_t err; // 0xff == OK
+};
+
 struct profinet_dev
 {
     int fd;

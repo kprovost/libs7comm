@@ -62,6 +62,28 @@ static err_t profinet_receive_read(struct profinet_dev_t *dev, struct ppkt_t *p)
     return ERR_NONE;
 }
 
+static err_t profinet_receive_write(struct profinet_dev_t *dev, struct ppkt_t *p)
+{
+    assert(dev);
+    assert(p);
+
+    if (ppkt_size(p) < sizeof(struct profinet_write_response_t))
+    {
+        ppkt_free(p);
+        return ERR_WRITE_FAILURE;
+    }
+
+    struct profinet_write_response_t *resp = (struct profinet_write_response_t*)ppkt_payload(p);
+    if (resp->err != 0xff)
+    {
+        ppkt_free(p);
+        return ERR_WRITE_FAILURE;
+    }
+
+    ppkt_free(p);
+    return ERR_NONE;
+}
+
 static err_t profinet_receive(struct ppkt_t *p, void *user)
 {
     assert(p);
@@ -100,6 +122,8 @@ static err_t profinet_receive(struct ppkt_t *p, void *user)
             break;
         case profinet_function_read:
             return profinet_receive_read(dev, p);
+        case profinet_function_write:
+            return profinet_receive_write(dev, p);
     }
 
 done:
