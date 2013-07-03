@@ -14,4 +14,6 @@ err_t profinet_read_bit(struct profinet_dev_t *dev, int db, int number, bool *va
 err_t profinet_read_byte(struct profinet_dev_t *dev, int db, int number, uint8_t *value);
 err_t profinet_read_word(struct profinet_dev_t *dev, int db, int number, uint16_t *value);
 
+err_t profinet_write_word(struct profinet_dev_t *dev, int db, int number, uint16_t value);
+
 #endif

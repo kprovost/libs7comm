@@ -206,6 +206,76 @@ static err_t profinet_do_read_request(
     return ERR_NONE;
 }
 
+static int profinet_bit_size(enum profinet_read_size_t size)
+{
+    switch (size)
+    {
+        case profinet_read_size_bit:
+            return 1;
+        case profinet_read_size_byte:
+            return 8;
+        case profinet_read_size_word:
+            return 16;
+    }
+    assert(false);
+    return 0;
+}
+
+static err_t profinet_do_write_request(
+        struct profinet_dev_t *dev,
+        int db,
+        uint32_t start_addr,
+        enum profinet_read_size_t size,
+        struct ppkt_t *value)
+{
+    assert(dev);
+
+    int bit_size = profinet_bit_size(size);
+    struct ppkt_t *hdr = profinet_create_request_hdr(dev,
+            profinet_function_write,
+            sizeof(struct profinet_read_request_t),
+            sizeof(struct profinet_read_response_t) + (bit_size / 8));
+
+    struct ppkt_t *p = ppkt_alloc(sizeof(struct profinet_read_request_t));
+    struct profinet_read_request_t *req = (struct profinet_read_request_t*)ppkt_payload(p);
+
+    req->prefix = htons(0x120a);
+    req->unknown = 0x10;
+    req->read_size = size;
+    req->read_length = htons(1); // Number of words to read
+    req->db_num = htons(db);
+    req->area_code = profinet_area_DB;
+    req->start_addr = (start_addr & 0x00ff0000) >> 24;
+    req->start_addr_2 = htons(start_addr & 0xffff);
+
+    p = ppkt_prefix_header(hdr, p);
+    if (! p)
+        return ERR_NO_MEM;
+
+    struct ppkt_t *rr = ppkt_alloc(sizeof(struct profinet_read_response_t));
+    struct profinet_read_response_t *resp = (struct profinet_read_response_t*)ppkt_payload(rr);
+    resp->len_type = size;
+    resp->len = htons(bit_size);
+
+    p = ppkt_append_footer(rr, p);
+    p = ppkt_append_footer(value, p);
+
+    // Send
+    err_t err = cotp_send(dev->cotpdev, p);
+    if (! OK(err))
+        return err;
+
+    // Wait for reply
+    err = cotp_poll(dev->cotpdev);
+    if (! OK(err))
+        return err;
+
+    /*if (! dev->last_response)
+        return ERR_WRITE_FAILURE;*/
+
+    return ERR_NONE;
+}
+
 err_t profinet_read_bit(struct profinet_dev_t *dev, int db, int number, bool *value)
 {
     assert(dev);
@@ -265,4 +335,17 @@ err_t profinet_read_word(struct profinet_dev_t *dev, int db, int number, uint16_
     dev->last_response = NULL;
 
     return ERR_NONE;
+}
+
+err_t profinet_write_word(struct profinet_dev_t *dev, int db, int number, uint16_t value)
+{
+    assert(dev);
+    assert(value);
+
+    struct ppkt_t *p = ppkt_alloc(2);
+    uint16_t *write_val = (uint16_t*)ppkt_payload(p);
+    *write_val = htons(value);
+
+    uint32_t start_addr = number * 8;
+    return profinet_do_write_request(dev, db, start_addr, profinet_read_size_word, p);
 }
