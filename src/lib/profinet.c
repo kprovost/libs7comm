@@ -38,10 +38,15 @@ struct ppkt_t* profinet_create_request_hdr(struct profinet_dev_t *dev,
     return ppkt_prefix_header(p, r);
 }
 
-static err_t profinet_receive_read(struct profinet_dev_t *dev, struct ppkt_t *p)
+static struct ppkt_t* profinet_process_read(struct ppkt_t *p)
 {
-    assert(dev);
     assert(p);
+
+    if (ppkt_size(p) < sizeof(struct profinet_read_response_t))
+    {
+        ppkt_free(p);
+        return NULL;
+    }
 
     struct profinet_read_response_t *resp = (struct profinet_read_response_t*)ppkt_payload(p);
     uint16_t length = ntohs(resp->len);
@@ -51,37 +56,32 @@ static err_t profinet_receive_read(struct profinet_dev_t *dev, struct ppkt_t *p)
     if (resp->err != 0xff)
     {
         ppkt_free(p);
-        return ERR_READ_FAILURE;
+        return NULL;
     }
     ppkt_pull(p, sizeof(struct profinet_read_response_t));
     assert(length == ppkt_size(p));
 
-    assert(! dev->last_response);
-    dev->last_response = p;
-
-    return ERR_NONE;
+    return p;
 }
 
-static err_t profinet_receive_write(struct profinet_dev_t *dev, struct ppkt_t *p)
+static struct ppkt_t* profinet_process_write(struct ppkt_t *p)
 {
-    assert(dev);
     assert(p);
 
     if (ppkt_size(p) < sizeof(struct profinet_write_response_t))
     {
         ppkt_free(p);
-        return ERR_WRITE_FAILURE;
+        return NULL;
     }
 
     struct profinet_write_response_t *resp = (struct profinet_write_response_t*)ppkt_payload(p);
     if (resp->err != 0xff)
     {
         ppkt_free(p);
-        return ERR_WRITE_FAILURE;
+        return NULL;
     }
 
-    ppkt_free(p);
-    return ERR_NONE;
+    return p;
 }
 
 static err_t profinet_receive(struct ppkt_t *p, void *user)
@@ -92,6 +92,12 @@ static err_t profinet_receive(struct ppkt_t *p, void *user)
 
     struct profinet_dev_t *dev = (struct profinet_dev_t*)user;
 
+    dev->last_response = p;
+    return ERR_NONE;
+}
+
+static struct ppkt_t* profinet_process_receive(struct ppkt_t *p)
+{
     struct profinet_hdr_t *hdr = (struct profinet_hdr_t*)ppkt_payload(p);
     uint16_t plen = ntohs(hdr->plen);
     uint16_t dlen = ntohs(hdr->dlen);
@@ -103,10 +109,8 @@ static err_t profinet_receive(struct ppkt_t *p, void *user)
     ppkt_pull(p, sizeof(struct profinet_hdr_t));
 
     if (hdr->msgtype == 2 || hdr->msgtype == 3)
-    {
         // Result, if we're interested.
         ppkt_pull(p, 2);
-    }
 
     struct profinet_request_t *req = (struct profinet_request_t*)ppkt_payload(p);
     ppkt_pull(p, sizeof(struct profinet_request_t));
@@ -121,14 +125,14 @@ static err_t profinet_receive(struct ppkt_t *p, void *user)
             // Yay, but we don't care about the content
             break;
         case profinet_function_read:
-            return profinet_receive_read(dev, p);
+            return profinet_process_read(p);
         case profinet_function_write:
-            return profinet_receive_write(dev, p);
+            return profinet_process_write(p);
     }
 
 done:
     ppkt_free(p);
-    return ERR_NONE;
+    return NULL;
 }
 
 static err_t profinet_open_connection(struct profinet_dev_t *dev)
@@ -287,15 +291,21 @@ static err_t profinet_do_write_request(
     // Send
     err_t err = cotp_send(dev->cotpdev, p);
     if (! OK(err))
-        return err;
+        return ERR_WRITE_FAILURE;
 
     // Wait for reply
     err = cotp_poll(dev->cotpdev);
     if (! OK(err))
-        return err;
+        return ERR_WRITE_FAILURE;
 
-    /*if (! dev->last_response)
-        return ERR_WRITE_FAILURE;*/
+    if (! dev->last_response)
+        return ERR_WRITE_FAILURE;
+
+    struct ppkt_t *r = profinet_process_receive(dev->last_response);
+    dev->last_response = NULL;
+
+    if (! r)
+        return ERR_WRITE_FAILURE;
 
     return ERR_NONE;
 }
@@ -310,13 +320,20 @@ err_t profinet_read_bit(struct profinet_dev_t *dev, int db, int number, bool *va
     if (! OK(err))
         return err;
 
-    assert(ppkt_size(dev->last_response) == 1);
+    if (! dev->last_response)
+        return ERR_READ_FAILURE;
 
-    *value = *ppkt_payload(dev->last_response);
+    struct ppkt_t *r = profinet_process_receive(dev->last_response);
+    if (! r)
+    {
+        dev->last_response = NULL;
+        return ERR_READ_FAILURE;
+    }
 
-    ppkt_free(dev->last_response);
+    assert(ppkt_size(r) == 1);
+    *value = *ppkt_payload(r);
+
     dev->last_response = NULL;
-
     return ERR_NONE;
 }
 
@@ -330,14 +347,22 @@ err_t profinet_read_byte(struct profinet_dev_t *dev, int db, int number, uint8_t
     if (! OK(err))
         return err;
 
-    assert(ppkt_size(dev->last_response) == 1);
+    if (! dev->last_response)
+        return ERR_READ_FAILURE;
 
-    *value = *ppkt_payload(dev->last_response);
+    struct ppkt_t *r = profinet_process_receive(dev->last_response);
+    if (! r)
+    {
+        dev->last_response = NULL;
+        return ERR_READ_FAILURE;
+    }
 
-    ppkt_free(dev->last_response);
+    assert(ppkt_size(r) == 1);
+    *value = *ppkt_payload(r);
+
     dev->last_response = NULL;
 
-    return ERR_NONE;
+    return err;
 }
 
 err_t profinet_read_word(struct profinet_dev_t *dev, int db, int number, uint16_t *value)
@@ -350,15 +375,22 @@ err_t profinet_read_word(struct profinet_dev_t *dev, int db, int number, uint16_
     if (! OK(err))
         return err;
 
-    assert(ppkt_size(dev->last_response) == 2);
+    if (! dev->last_response)
+        return ERR_READ_FAILURE;
 
-    uint16_t *res = (uint16_t*)ppkt_payload(dev->last_response);
+    struct ppkt_t *r = profinet_process_receive(dev->last_response);
+    if (! r)
+    {
+        dev->last_response = NULL;
+        return ERR_READ_FAILURE;
+    }
+
+    assert(ppkt_size(r) == 2);
+    uint16_t *res = (uint16_t*)ppkt_payload(r);
     *value = ntohs(*res);
 
-    ppkt_free(dev->last_response);
     dev->last_response = NULL;
-
-    return ERR_NONE;
+    return err;
 }
 
 err_t profinet_write_word(struct profinet_dev_t *dev, int db, int number, uint16_t value)
