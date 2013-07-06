@@ -397,7 +397,6 @@ err_t profinet_read_word(struct profinet_dev_t *dev, int db, int number, uint16_
 err_t profinet_write_word(struct profinet_dev_t *dev, int db, int number, uint16_t value)
 {
     assert(dev);
-    assert(value);
 
     struct ppkt_t *p = ppkt_alloc(2);
     uint16_t *write_val = PPKT_GET(uint16_t, p);
