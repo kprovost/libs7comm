@@ -92,6 +92,7 @@ static err_t profinet_receive(struct ppkt_t *p, void *user)
 
     struct profinet_dev_t *dev = (struct profinet_dev_t*)user;
 
+    assert(! dev->last_response);
     dev->last_response = p;
     return ERR_NONE;
 }
@@ -156,8 +157,19 @@ static err_t profinet_open_connection(struct profinet_dev_t *dev)
     if (! OK(err))
         return err;
 
-    // TODO: Don't just assume we got the expected response!
-    return cotp_poll(dev->cotpdev);
+    err = cotp_poll(dev->cotpdev);
+    if (! OK(err))
+        return err;
+
+    if (! dev->last_response)
+        return ERR_CONNECTION_CLOSED;
+
+    // TODO: Don't just assume that connecting succeeded
+    struct ppkt_t *r = profinet_process_receive(dev->last_response);
+    assert(! r);
+    dev->last_response = NULL;
+
+    return ERR_NONE;
 }
 
 struct profinet_dev_t* profinet_connect(const char *addr)
@@ -362,7 +374,6 @@ err_t profinet_read_byte(struct profinet_dev_t *dev, int db, int number, uint8_t
     *value = *PPKT_GET(uint8_t, r);
 
     dev->last_response = NULL;
-
     return err;
 }
 
