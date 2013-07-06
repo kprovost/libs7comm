@@ -282,6 +282,7 @@ static err_t profinet_do_write_request(
 
     struct ppkt_t *rr = ppkt_alloc(sizeof(struct profinet_read_response_t));
     struct profinet_read_response_t *resp = PPKT_GET(struct profinet_read_response_t, rr);
+    resp->err = 0xff;
     resp->len_type = size;
     resp->len = htons(bit_size);
 
