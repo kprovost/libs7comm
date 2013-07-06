@@ -66,7 +66,7 @@ static err_t cotp_receive_connect_confirm(struct cotp_dev_t *dev, struct ppkt_t 
 
     p = ppkt_coalesce(p, size);
 
-    struct cotphdr_connect_t *conn = (struct cotphdr_connect_t*)ppkt_payload(p);
+    struct cotphdr_connect_t *conn = PPKT_GET(struct cotphdr_connect_t, p);
     assert(conn->flags == 0);
 
     assert(dev->state == COTP_STATE_CONNECTING);
@@ -88,7 +88,7 @@ static err_t cotp_receive_data(struct cotp_dev_t *dev, struct ppkt_t *p)
     assert(size >= sizeof(struct cotphdr_data_t));
 
     p = ppkt_coalesce(p, sizeof(struct cotphdr_data_t));
-    struct cotphdr_data_t *data = (struct cotphdr_data_t*)ppkt_payload(p);
+    struct cotphdr_data_t *data = PPKT_GET(struct cotphdr_data_t, p);
 
     assert(data->common.size == sizeof(struct cotphdr_data_t) - 1);
 
@@ -115,7 +115,7 @@ static err_t cotp_receive(struct ppkt_t *p, void *user)
     size_t pktsize = ppkt_chain_size(p);
     assert(pktsize > sizeof(struct cotphdr_common_t));
 
-    struct cotphdr_common_t *cotphdr = (struct cotphdr_common_t*)ppkt_payload(p);
+    struct cotphdr_common_t *cotphdr = PPKT_GET(struct cotphdr_common_t, p);
     uint8_t cotpsize = cotphdr->size;
 
     assert(pktsize >= cotpsize);
@@ -137,7 +137,7 @@ static void cotp_append_option(struct ppkt_t *p, enum cotp_param_t type, size_t 
 
     struct ppkt_t *option = ppkt_alloc(2 + size);
 
-    uint8_t *bytes = ppkt_payload(option);
+    uint8_t *bytes = PPKT_GET(uint8_t, option);
 
     *bytes++ = type;
     *bytes++ = size;
@@ -181,7 +181,7 @@ struct cotp_dev_t* cotp_connect(const char *addr, ppkt_receive_function_t receiv
     // Send out connect message
     struct ppkt_t *p = ppkt_alloc(sizeof(struct cotphdr_connect_t));
 
-    struct cotphdr_connect_t *conn = (struct cotphdr_connect_t*)ppkt_payload(p);
+    struct cotphdr_connect_t *conn = PPKT_GET(struct cotphdr_connect_t, p);
     conn->common.tpdu_code = COTP_TPDU_CONNECT_REQUEST;
     conn->dst_ref = htons(0);
     conn->src_ref = htons(1);
@@ -232,7 +232,7 @@ err_t cotp_send(struct cotp_dev_t *dev, struct ppkt_t *p)
     assert(p);
 
     struct ppkt_t *hdr = ppkt_alloc(sizeof(struct cotphdr_data_t));
-    struct cotphdr_data_t *datahdr = (struct cotphdr_data_t*)ppkt_payload(hdr);
+    struct cotphdr_data_t *datahdr = PPKT_GET(struct cotphdr_data_t, hdr);
 
     datahdr->common.size = sizeof(struct cotphdr_data_t) - 1;
     datahdr->common.tpdu_code = COTP_TPDU_DATA;

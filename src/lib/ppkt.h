@@ -19,6 +19,7 @@ struct ppkt_t *ppkt_coalesce(struct ppkt_t *p, size_t size);
 void ppkt_split(struct ppkt_t *front, struct ppkt_t **back, size_t cut);
 
 uint8_t* ppkt_payload(struct ppkt_t *p);
+uint8_t* ppkt_payload_sized(struct ppkt_t *p, size_t size);
 
 /* Size of this packet, without chained packets */
 size_t ppkt_size(struct ppkt_t *p);
@@ -33,5 +34,8 @@ struct ppkt_t* ppkt_next(struct ppkt_t *p);
 
 void ppkt_pull(struct ppkt_t *p, size_t size);
 void ppkt_cut(struct ppkt_t *p, size_t size);
+
+#define PPKT_GET(type, p) \
+    (type*)ppkt_payload_sized(p, sizeof(type))
 
 #endif

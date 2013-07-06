@@ -176,6 +176,13 @@ uint8_t* ppkt_payload(struct ppkt_t *p)
     return p->payload + p->offset;
 }
 
+uint8_t* ppkt_payload_sized(struct ppkt_t *p, size_t size)
+{
+    assert(p);
+    assert(ppkt_size(p) >= size);
+    return ppkt_payload(p);
+}
+
 size_t ppkt_size(struct ppkt_t *p)
 {
     assert(p);

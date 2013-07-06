@@ -21,7 +21,7 @@ struct ppkt_t* profinet_create_request_hdr(struct profinet_dev_t *dev,
 
     struct ppkt_t *p = ppkt_alloc(sizeof(struct profinet_hdr_t));
 
-    struct profinet_hdr_t *hdr = (struct profinet_hdr_t*)ppkt_payload(p);
+    struct profinet_hdr_t *hdr = PPKT_GET(struct profinet_hdr_t, p);
     hdr->version = PROFINET_VERSION;
     hdr->msgtype = 1;
     hdr->zero = 0;
@@ -30,7 +30,7 @@ struct ppkt_t* profinet_create_request_hdr(struct profinet_dev_t *dev,
     hdr->dlen = htons(data_size);
 
     struct ppkt_t *r = ppkt_alloc(sizeof(struct profinet_request_t));
-    struct profinet_request_t *req = (struct profinet_request_t*)ppkt_payload(r);
+    struct profinet_request_t *req = PPKT_GET(struct profinet_request_t, r);
 
     req->function = function;
     req->unknown = 1;
@@ -48,7 +48,7 @@ static struct ppkt_t* profinet_process_read(struct ppkt_t *p)
         return NULL;
     }
 
-    struct profinet_read_response_t *resp = (struct profinet_read_response_t*)ppkt_payload(p);
+    struct profinet_read_response_t *resp = PPKT_GET(struct profinet_read_response_t, p);
     uint16_t length = ntohs(resp->len);
     if (resp->len_type == 4)
         length >>= 3;
@@ -74,7 +74,7 @@ static struct ppkt_t* profinet_process_write(struct ppkt_t *p)
         return NULL;
     }
 
-    struct profinet_write_response_t *resp = (struct profinet_write_response_t*)ppkt_payload(p);
+    struct profinet_write_response_t *resp = PPKT_GET(struct profinet_write_response_t, p);
     if (resp->err != 0xff)
     {
         ppkt_free(p);
@@ -98,7 +98,7 @@ static err_t profinet_receive(struct ppkt_t *p, void *user)
 
 static struct ppkt_t* profinet_process_receive(struct ppkt_t *p)
 {
-    struct profinet_hdr_t *hdr = (struct profinet_hdr_t*)ppkt_payload(p);
+    struct profinet_hdr_t *hdr = PPKT_GET(struct profinet_hdr_t, p);
     uint16_t plen = ntohs(hdr->plen);
     uint16_t dlen = ntohs(hdr->dlen);
 
@@ -112,7 +112,7 @@ static struct ppkt_t* profinet_process_receive(struct ppkt_t *p)
         // Result, if we're interested.
         ppkt_pull(p, 2);
 
-    struct profinet_request_t *req = (struct profinet_request_t*)ppkt_payload(p);
+    struct profinet_request_t *req = PPKT_GET(struct profinet_request_t, p);
     ppkt_pull(p, sizeof(struct profinet_request_t));
 
     if (ppkt_size(p) < (plen - 2 + dlen))
@@ -145,7 +145,7 @@ static err_t profinet_open_connection(struct profinet_dev_t *dev)
             sizeof(struct profinet_open_connection_t), 0);
 
     struct ppkt_t *p = ppkt_alloc(sizeof(struct profinet_open_connection_t));
-    struct profinet_open_connection_t *conn = (struct profinet_open_connection_t*)ppkt_payload(p);
+    struct profinet_open_connection_t *conn = PPKT_GET(struct profinet_open_connection_t, p);
     conn->unknown1 = htons(1);
     conn->unknown2 = htons(1);
     conn->unknown3 = htons(0x03c0);
@@ -205,7 +205,7 @@ static err_t profinet_do_read_request(
             sizeof(struct profinet_read_request_t), 0);
 
     struct ppkt_t *p = ppkt_alloc(sizeof(struct profinet_read_request_t));
-    struct profinet_read_request_t *req = (struct profinet_read_request_t*)ppkt_payload(p);
+    struct profinet_read_request_t *req = PPKT_GET(struct profinet_read_request_t, p);
 
     req->prefix = htons(0x120a); // TODO
     req->unknown = 0x10;
@@ -265,7 +265,7 @@ static err_t profinet_do_write_request(
             sizeof(struct profinet_read_response_t) + (bit_size / 8));
 
     struct ppkt_t *p = ppkt_alloc(sizeof(struct profinet_read_request_t));
-    struct profinet_read_request_t *req = (struct profinet_read_request_t*)ppkt_payload(p);
+    struct profinet_read_request_t *req = PPKT_GET(struct profinet_read_request_t, p);
 
     req->prefix = htons(0x120a);
     req->unknown = 0x10;
@@ -281,7 +281,7 @@ static err_t profinet_do_write_request(
         return ERR_NO_MEM;
 
     struct ppkt_t *rr = ppkt_alloc(sizeof(struct profinet_read_response_t));
-    struct profinet_read_response_t *resp = (struct profinet_read_response_t*)ppkt_payload(rr);
+    struct profinet_read_response_t *resp = PPKT_GET(struct profinet_read_response_t, rr);
     resp->len_type = size;
     resp->len = htons(bit_size);
 
@@ -331,7 +331,7 @@ err_t profinet_read_bit(struct profinet_dev_t *dev, int db, int number, bool *va
     }
 
     assert(ppkt_size(r) == 1);
-    *value = *ppkt_payload(r);
+    *value = *PPKT_GET(uint8_t, r);
 
     dev->last_response = NULL;
     return ERR_NONE;
@@ -358,7 +358,7 @@ err_t profinet_read_byte(struct profinet_dev_t *dev, int db, int number, uint8_t
     }
 
     assert(ppkt_size(r) == 1);
-    *value = *ppkt_payload(r);
+    *value = *PPKT_GET(uint8_t, r);
 
     dev->last_response = NULL;
 
@@ -386,7 +386,7 @@ err_t profinet_read_word(struct profinet_dev_t *dev, int db, int number, uint16_
     }
 
     assert(ppkt_size(r) == 2);
-    uint16_t *res = (uint16_t*)ppkt_payload(r);
+    uint16_t *res = PPKT_GET(uint16_t, r);
     *value = ntohs(*res);
 
     dev->last_response = NULL;
@@ -399,7 +399,7 @@ err_t profinet_write_word(struct profinet_dev_t *dev, int db, int number, uint16
     assert(value);
 
     struct ppkt_t *p = ppkt_alloc(2);
-    uint16_t *write_val = (uint16_t*)ppkt_payload(p);
+    uint16_t *write_val = PPKT_GET(uint16_t, p);
     *write_val = htons(value);
 
     uint32_t start_addr = number * 8;

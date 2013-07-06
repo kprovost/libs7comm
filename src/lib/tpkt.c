@@ -39,7 +39,7 @@ static err_t tpkt_receive(struct ppkt_t *p, void *user)
 
     dev->pktqueue = ppkt_coalesce(dev->pktqueue, sizeof(struct tpkthdr_t));
 
-    struct tpkthdr_t *tpkthdr = (struct tpkthdr_t*)ppkt_payload(dev->pktqueue);
+    struct tpkthdr_t *tpkthdr = PPKT_GET(struct tpkthdr_t, dev->pktqueue);
 
     assert(tpkthdr->version == 3);
 
@@ -118,7 +118,7 @@ err_t tpkt_send(struct tpkt_dev_t *dev, struct ppkt_t *p)
     assert(p);
 
     struct ppkt_t *hdr = ppkt_alloc(sizeof(struct tpkthdr_t));
-    struct tpkthdr_t *tpkthdr = (struct tpkthdr_t*)ppkt_payload(hdr);
+    struct tpkthdr_t *tpkthdr = PPKT_GET(struct tpkthdr_t, hdr);
 
     tpkthdr->version = 3;
     tpkthdr->reserved = 0;
