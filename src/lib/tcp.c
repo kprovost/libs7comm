@@ -90,18 +90,21 @@ err_t tcp_send(struct tcp_dev_t *dev, struct ppkt_t *p)
     if (! iov)
         return ERR_NO_MEM;
 
+    struct ppkt_t *it = p;
     for (size_t i = 0; i < pkts; i++)
     {
-        iov[i].iov_base = ppkt_payload(p);
-        iov[i].iov_len = ppkt_size(p);
+        iov[i].iov_base = ppkt_payload(it);
+        iov[i].iov_len = ppkt_size(it);
 
-        p = ppkt_next(p);
+        it = ppkt_next(it);
     }
 
     ssize_t ret = writev(dev->fd, iov, pkts);
     assert(size == (size_t)ret);
 
     free(iov);
+
+    ppkt_free(p);
 
     return ret == -1 ? ERR_SEND_FAILED : ERR_NONE;
 }
