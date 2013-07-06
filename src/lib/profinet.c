@@ -320,6 +320,7 @@ static err_t profinet_do_write_request(
     if (! r)
         return ERR_WRITE_FAILURE;
 
+    ppkt_free(r);
     return ERR_NONE;
 }
 
@@ -346,6 +347,7 @@ err_t profinet_read_bit(struct profinet_dev_t *dev, int db, int number, bool *va
     assert(ppkt_size(r) == 1);
     *value = *PPKT_GET(uint8_t, r);
 
+    ppkt_free(r);
     dev->last_response = NULL;
     return ERR_NONE;
 }
@@ -373,6 +375,7 @@ err_t profinet_read_byte(struct profinet_dev_t *dev, int db, int number, uint8_t
     assert(ppkt_size(r) == 1);
     *value = *PPKT_GET(uint8_t, r);
 
+    ppkt_free(r);
     dev->last_response = NULL;
     return err;
 }
@@ -401,6 +404,7 @@ err_t profinet_read_word(struct profinet_dev_t *dev, int db, int number, uint16_
     uint16_t *res = PPKT_GET(uint16_t, r);
     *value = ntohs(*res);
 
+    ppkt_free(r);
     dev->last_response = NULL;
     return err;
 }
