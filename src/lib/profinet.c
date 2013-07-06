@@ -274,7 +274,7 @@ static err_t profinet_do_write_request(
     struct ppkt_t *hdr = profinet_create_request_hdr(dev,
             profinet_function_write,
             sizeof(struct profinet_read_request_t),
-            sizeof(struct profinet_read_response_t) + (bit_size / 8));
+            sizeof(struct profinet_read_response_t) + ppkt_size(value));
 
     struct ppkt_t *p = ppkt_alloc(sizeof(struct profinet_read_request_t));
     struct profinet_read_request_t *req = PPKT_GET(struct profinet_read_request_t, p);
