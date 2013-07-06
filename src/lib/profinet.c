@@ -53,7 +53,7 @@ static struct ppkt_t* profinet_process_read(struct ppkt_t *p)
     if (resp->len_type == 4)
         length >>= 3;
 
-    if (resp->err != 0xff)
+    if (resp->err != PROFINET_READ_RESPONSE_ERR_NONE)
     {
         ppkt_free(p);
         return NULL;
@@ -75,7 +75,7 @@ static struct ppkt_t* profinet_process_write(struct ppkt_t *p)
     }
 
     struct profinet_write_response_t *resp = PPKT_GET(struct profinet_write_response_t, p);
-    if (resp->err != 0xff)
+    if (resp->err != PROFINET_READ_RESPONSE_ERR_NONE)
     {
         ppkt_free(p);
         return NULL;
@@ -282,7 +282,7 @@ static err_t profinet_do_write_request(
 
     struct ppkt_t *rr = ppkt_alloc(sizeof(struct profinet_read_response_t));
     struct profinet_read_response_t *resp = PPKT_GET(struct profinet_read_response_t, rr);
-    resp->err = 0xff;
+    resp->err = PROFINET_READ_RESPONSE_ERR_NONE;
     resp->len_type = size;
     resp->len = htons(bit_size);
 

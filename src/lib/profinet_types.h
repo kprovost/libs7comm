@@ -85,6 +85,11 @@ struct profinet_read_request_t
     uint16_t start_addr_2; /* start, part 2, is 3 bytes in total */
 } __attribute__((packed));
 
+enum profinet_read_response_err_t
+{
+    PROFINET_READ_RESPONSE_ERR_NONE = 0xff
+};
+
 struct profinet_read_response_t
 {
     uint8_t err; // 0xff == OK
