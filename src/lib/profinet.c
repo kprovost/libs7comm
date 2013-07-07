@@ -295,7 +295,7 @@ static err_t profinet_do_write_request(
     struct ppkt_t *rr = ppkt_alloc(sizeof(struct profinet_read_response_t));
     struct profinet_read_response_t *resp = PPKT_GET(struct profinet_read_response_t, rr);
     resp->err = PROFINET_READ_RESPONSE_ERR_NONE;
-    resp->len_type = size;
+    resp->len_type = ( size == profinet_read_size_bit ? 3 : 4 );
     resp->len = htons(bit_size);
 
     p = ppkt_append_footer(rr, p);
@@ -407,6 +407,30 @@ err_t profinet_read_word(struct profinet_dev_t *dev, int db, int number, uint16_
     ppkt_free(r);
     dev->last_response = NULL;
     return err;
+}
+
+err_t profinet_write_bit(struct profinet_dev_t *dev, int db, int number, uint8_t value)
+{
+    assert(dev);
+
+    struct ppkt_t *p = ppkt_alloc(1);
+    uint8_t *write_val = PPKT_GET(uint8_t, p);
+    *write_val = !! value;
+
+    uint32_t start_addr = number;
+    return profinet_do_write_request(dev, db, start_addr, profinet_read_size_bit, p);
+}
+
+err_t profinet_write_byte(struct profinet_dev_t *dev, int db, int number, uint8_t value)
+{
+    assert(dev);
+
+    struct ppkt_t *p = ppkt_alloc(1);
+    uint8_t *write_val = PPKT_GET(uint8_t, p);
+    *write_val = value;
+
+    uint32_t start_addr = number * 8;
+    return profinet_do_write_request(dev, db, start_addr, profinet_read_size_byte, p);
 }
 
 err_t profinet_write_word(struct profinet_dev_t *dev, int db, int number, uint16_t value)
