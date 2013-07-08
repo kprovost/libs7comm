@@ -1,7 +1,6 @@
 include $(topdir)/build/head.mk
 
 lib_srcs := \
-	pcap.c \
 	ppkt.c \
 	profinet.c \
 	profinet_debug.c \

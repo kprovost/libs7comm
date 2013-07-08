@@ -28,7 +28,7 @@ endif
 		-o $(@) \
 		$^
 
-pnget/pnget analysis/analyze test/tests:
+pnget/pnget test/tests:
 	@echo [LD] $(@F)
 	$(Q)$(CXX) \
 		-o $(@) \
@@ -45,7 +45,6 @@ test: test/tests
 
 clean:
 	rm -Rf lib/*.o lib/*.o.d lib/*.so
-	rm -Rf analysis/*.o analysis/*.o.d analysis/analyze
 	rm -Rf pnget/*.o pnget/*.o.d pnget/pnget
 	rm -Rf test/*.o test/*.o.d test/tests
 	rm -f cpputest*.xml

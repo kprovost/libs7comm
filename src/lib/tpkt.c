@@ -1,6 +1,5 @@
 #include "tpkt.h"
 #include "tcp.h"
-#include "pcap.h"
 
 #include <assert.h>
 #include <stdlib.h>
@@ -12,7 +11,6 @@ struct tpkt_dev_t
 {
     ppkt_receive_function_t receive;
     struct tcp_dev_t  *tcp;
-    struct pcap_dev_t *pcap;
     void *user;
 
     struct ppkt_t *pktqueue;
@@ -70,25 +68,16 @@ struct tpkt_dev_t* tpkt_connect(const char *addr, ppkt_receive_function_t receiv
         return NULL;
 
     dev->tcp = NULL;
-    dev->pcap = NULL;
     dev->receive = receive;
     dev->user = user;
     dev->pktqueue = NULL;
 
-    /* Little special here, but it's easy to test.
-     *
-     * We try to 'connect' to a pcap file, if that fails we try to use the addr
-     * as a TCP target instead */
-    dev->pcap = pcap_connect(addr, tpkt_receive, dev);
-    if (! dev->pcap)
-    {
-        dev->tcp = tcp_connect(addr, TPKT_PORT, tpkt_receive, dev);
+    dev->tcp = tcp_connect(addr, TPKT_PORT, tpkt_receive, dev);
 
-        if (! dev->tcp)
-        {
-            free(dev);
-            dev = NULL;
-        }
+    if (! dev->tcp)
+    {
+        free(dev);
+        dev = NULL;
     }
 
     return dev;
@@ -97,16 +86,9 @@ struct tpkt_dev_t* tpkt_connect(const char *addr, ppkt_receive_function_t receiv
 void tpkt_disconnect(struct tpkt_dev_t *dev)
 {
     assert(dev);
+    assert(dev->tcp);
 
-    if (dev->pcap)
-    {
-        pcap_disconnect(dev->pcap);
-    }
-    else
-    {
-        assert(dev->tcp);
-        tcp_disconnect(dev->tcp);
-    }
+    tcp_disconnect(dev->tcp);
 
     ppkt_free(dev->pktqueue);
     free(dev);
@@ -126,7 +108,6 @@ err_t tpkt_send(struct tpkt_dev_t *dev, struct ppkt_t *p)
 
     p = ppkt_prefix_header(hdr, p);
 
-    // For obvious reasons pcap has no send.
     assert(dev->tcp);
     return tcp_send(dev->tcp, p);
 }
@@ -134,9 +115,5 @@ err_t tpkt_send(struct tpkt_dev_t *dev, struct ppkt_t *p)
 err_t tpkt_poll(struct tpkt_dev_t *dev)
 {
     assert(dev);
-
-    if (dev->pcap)
-        return pcap_poll(dev->pcap);
-    else
-        return tcp_poll(dev->tcp);
+    return tcp_poll(dev->tcp);
 }
