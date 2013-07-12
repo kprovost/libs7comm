@@ -10,7 +10,7 @@ include test/build.mk
 
 lib/libs7comm.so: $(LIB_OBJS)
 
-s7get/s7get: $(S7GET_OBJS)
+s7get/s7get: $(S7GET_OBJS) lib/libs7comm.so
 
 test/tests: $(TEST_OBJS) lib/libs7comm.so
 
