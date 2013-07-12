@@ -6,8 +6,9 @@
 #include <poll.h>
 #include <sys/types.h>
 #include <sys/socket.h>
+#include <sys/uio.h>
+#include <netinet/tcp.h>
 #include <netinet/in.h>
-#include <linux/tcp.h>
 #include <unistd.h>
 #include <string.h>
 #include <assert.h>
