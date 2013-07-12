@@ -4,7 +4,7 @@
 #include <string.h>
 #include <errno.h>
 #include <unistd.h>
-#include "profinet.h"
+#include "s7comm.h"
 
 static void help(const char *name)
 {
@@ -41,7 +41,7 @@ int main(int argc, char **argv)
     if (! ip || db == -1 || num == -1)
         help(argv[0]);
 
-    struct profinet_dev_t *dev = profinet_connect(ip);
+    struct s7comm_dev_t *dev = s7comm_connect(ip);
     if (! dev)
     {
         printf("Failed to connect: %s (%d)\n", strerror(errno), errno);
@@ -49,7 +49,7 @@ int main(int argc, char **argv)
     }
 
     uint16_t value = 0;
-    err_t err = profinet_read_word(dev, db, num, &value);
+    err_t err = s7comm_read_word(dev, db, num, &value);
     if (! OK(err))
     {
         printf("Failed to read\n");
@@ -59,7 +59,7 @@ int main(int argc, char **argv)
     printf("Value: 0x%04x\n", value);
 
 exit:
-    profinet_disconnect(dev);
+    s7comm_disconnect(dev);
 
     return 0;
 }

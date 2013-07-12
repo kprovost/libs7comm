@@ -1,18 +1,18 @@
-all: lib/libprofinet.so pnget/pnget test/tests
+all: lib/libs7comm.so s7get/s7get test/tests
 
 include build/debug.mk
 include build/rules.mk
 include build/vars.mk
 
 include lib/build.mk
-include pnget/build.mk
+include s7get/build.mk
 include test/build.mk
 
-lib/libprofinet.so: $(LIB_OBJS)
+lib/libs7comm.so: $(LIB_OBJS)
 
-pnget/pnget: $(PNGET_OBJS)
+s7get/s7get: $(S7GET_OBJS)
 
-test/tests: $(TEST_OBJS) lib/libprofinet.so
+test/tests: $(TEST_OBJS) lib/libs7comm.so
 
 # Dependencies
 -include $(addsuffix .d, $(OBJS))

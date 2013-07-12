@@ -9,7 +9,7 @@ topdir := $(shell pwd)/
 src-to-obj = $(patsubst %.cpp,%.o,$(patsubst %.c,%.o,$(1)))
 
 LIB_OBJS = $(call src-to-obj,$(LIB_SRCS))
-PNGET_OBJS = $(call src-to-obj,$(PNGET_SRCS))
+S7GET_OBJS = $(call src-to-obj,$(S7GET_SRCS))
 TEST_OBJS = $(call src-to-obj,$(TEST_SRCS))
 
 module = $(<D)

@@ -1,7 +1,7 @@
-libprofinet
+libs7comm
 ===========
 
-A simplistic (attempt at an) implementation of the Profinet protocol suite,
+A simplistic (attempt at an) implementation of the S7 communications protocol,
 used to communicate with Siemens PLCs.
 
 This work is inspired by the existing

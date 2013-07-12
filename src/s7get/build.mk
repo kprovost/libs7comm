@@ -1,7 +1,7 @@
 include $(topdir)/build/head.mk
 
-pnget_srcs := \
-	pnget.c
+s7get_srcs := \
+	s7get.c
 
 includes := include
 

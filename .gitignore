@@ -1,9 +1,9 @@
 *.o
 *.o.d
 *.html
-pnget
+s7get
 analyze
-libprofinet.so
+libs7comm.so
 tags
 cscope.files
 cscope.out

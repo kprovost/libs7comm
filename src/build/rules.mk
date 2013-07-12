@@ -28,12 +28,12 @@ endif
 		-o $(@) \
 		$^
 
-pnget/pnget test/tests:
+s7get/s7get test/tests:
 	@echo [LD] $(@F)
 	$(Q)$(CXX) \
 		-o $(@) \
 		$^ \
-		lib/libprofinet.so \
+		lib/libs7comm.so \
 		$(LDFLAGS)
 
 .PHONY: test
@@ -45,6 +45,6 @@ test: test/tests
 
 clean:
 	rm -Rf lib/*.o lib/*.o.d lib/*.so
-	rm -Rf pnget/*.o pnget/*.o.d pnget/pnget
+	rm -Rf s7get/*.o s7get/*.o.d s7get/s7get
 	rm -Rf test/*.o test/*.o.d test/tests
 	rm -f cpputest*.xml
