@@ -1,0 +1,14 @@
+S7COMM_0.1 {
+    global:
+        s7comm_connect;
+        s7comm_disconnect;
+        s7comm_read_bit;
+        s7comm_read_byte;
+        s7comm_read_word;
+        s7comm_write_bit;
+        s7comm_write_byte;
+        s7comm_write_word;
+    local:
+        *;
+};
+

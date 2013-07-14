@@ -10,6 +10,6 @@ lib_srcs := \
 
 #includes := include
 cflags := -fPIC
-ldflags := -lpcap
+ldflags := -Wl,--version-script,lib/s7comm.map -Wl,-soname=libs7comm.so.0
 
 include $(topdir)/build/bottom.mk

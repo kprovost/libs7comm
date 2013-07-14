@@ -21,7 +21,7 @@ endif
 		$< \
 		-o $@
 
-%.so:
+%.so.${LIB_VERSION}:
 	@echo [LD] $(@F)
 	$(Q)$(LD) -shared \
 		$(LDFLAGS) \
@@ -33,7 +33,6 @@ s7get/s7get test/tests:
 	$(Q)$(CXX) \
 		-o $(@) \
 		$^ \
-		lib/libs7comm.so \
 		$(LDFLAGS)
 
 .PHONY: test
@@ -44,7 +43,7 @@ test: test/tests
 .PHONY: clean
 
 clean:
-	rm -Rf lib/*.o lib/*.o.d lib/*.so
+	rm -Rf lib/*.o lib/*.o.d lib/*.so.*
 	rm -Rf s7get/*.o s7get/*.o.d s7get/s7get
 	rm -Rf test/*.o test/*.o.d test/tests
 	rm -f cpputest*.xml
