@@ -199,7 +199,7 @@ struct s7comm_dev_t* s7comm_connect(const char *addr)
 
 void s7comm_disconnect(struct s7comm_dev_t *dev)
 {
-    assert(dev);
+    if (! dev) return;
     cotp_disconnect(dev->cotpdev);
     free(dev);
 }
