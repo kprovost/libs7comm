@@ -6,7 +6,8 @@ lib_srcs := \
 	s7comm_debug.c \
 	tcp.c  \
 	tpkt.c \
-	cotp.c
+	cotp.c \
+	err.c
 
 #includes := include
 cflags := -fPIC

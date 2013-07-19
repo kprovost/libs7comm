@@ -8,6 +8,8 @@ S7COMM_0.1 {
         s7comm_write_bit;
         s7comm_write_byte;
         s7comm_write_word;
+
+        err_to_string;
     local:
         *;
 };

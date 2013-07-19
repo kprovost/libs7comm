@@ -16,4 +16,6 @@ typedef enum
 } err_t;
 #define OK(x) (x == ERR_NONE)
 
+const char* err_to_string(const err_t err);
+
 #endif
