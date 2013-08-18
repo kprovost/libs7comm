@@ -352,7 +352,7 @@ static err_t s7comm_do_write_request(
     return err;
 }
 
-err_t s7comm_read_bit(struct s7comm_dev_t *dev, int db, int number, bool *value)
+err_t s7comm_read_db_bit(struct s7comm_dev_t *dev, int db, int number, bool *value)
 {
     assert(dev);
     assert(value);
@@ -380,7 +380,7 @@ err_t s7comm_read_bit(struct s7comm_dev_t *dev, int db, int number, bool *value)
     return ERR_NONE;
 }
 
-err_t s7comm_read_byte(struct s7comm_dev_t *dev, int db, int number, uint8_t *value)
+err_t s7comm_read_db_byte(struct s7comm_dev_t *dev, int db, int number, uint8_t *value)
 {
     assert(dev);
     assert(value);
@@ -408,7 +408,7 @@ err_t s7comm_read_byte(struct s7comm_dev_t *dev, int db, int number, uint8_t *va
     return err;
 }
 
-err_t s7comm_read_word(struct s7comm_dev_t *dev, int db, int number, uint16_t *value)
+err_t s7comm_read_db_word(struct s7comm_dev_t *dev, int db, int number, uint16_t *value)
 {
     assert(dev);
     assert(value);
@@ -437,7 +437,7 @@ err_t s7comm_read_word(struct s7comm_dev_t *dev, int db, int number, uint16_t *v
     return err;
 }
 
-err_t s7comm_write_bit(struct s7comm_dev_t *dev, int db, int number, uint8_t value)
+err_t s7comm_write_db_bit(struct s7comm_dev_t *dev, int db, int number, uint8_t value)
 {
     assert(dev);
 
@@ -449,7 +449,7 @@ err_t s7comm_write_bit(struct s7comm_dev_t *dev, int db, int number, uint8_t val
     return s7comm_do_write_request(dev, db, start_addr, s7comm_read_size_bit, p);
 }
 
-err_t s7comm_write_byte(struct s7comm_dev_t *dev, int db, int number, uint8_t value)
+err_t s7comm_write_db_byte(struct s7comm_dev_t *dev, int db, int number, uint8_t value)
 {
     assert(dev);
 
@@ -461,7 +461,7 @@ err_t s7comm_write_byte(struct s7comm_dev_t *dev, int db, int number, uint8_t va
     return s7comm_do_write_request(dev, db, start_addr, s7comm_read_size_byte, p);
 }
 
-err_t s7comm_write_word(struct s7comm_dev_t *dev, int db, int number, uint16_t value)
+err_t s7comm_write_db_word(struct s7comm_dev_t *dev, int db, int number, uint16_t value)
 {
     assert(dev);
 

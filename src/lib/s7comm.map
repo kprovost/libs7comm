@@ -2,12 +2,12 @@ S7COMM_0.1 {
     global:
         s7comm_connect;
         s7comm_disconnect;
-        s7comm_read_bit;
-        s7comm_read_byte;
-        s7comm_read_word;
-        s7comm_write_bit;
-        s7comm_write_byte;
-        s7comm_write_word;
+        s7comm_read_db_bit;
+        s7comm_read_db_byte;
+        s7comm_read_db_word;
+        s7comm_write_db_bit;
+        s7comm_write_db_byte;
+        s7comm_write_db_word;
 
         err_to_string;
     local:

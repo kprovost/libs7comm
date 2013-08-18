@@ -49,7 +49,7 @@ int main(int argc, char **argv)
     }
 
     uint16_t value = 0;
-    err_t err = s7comm_read_word(dev, db, num, &value);
+    err_t err = s7comm_read_db_word(dev, db, num, &value);
     if (! OK(err))
     {
         printf("Failed to read\n");
