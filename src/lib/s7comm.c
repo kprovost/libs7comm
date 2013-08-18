@@ -14,7 +14,7 @@ struct s7comm_dev_t
     struct ppkt_t *last_response;
 };
 
-struct ppkt_t* s7comm_create_request_hdr(struct s7comm_dev_t *dev,
+static struct ppkt_t* s7comm_create_request_hdr(struct s7comm_dev_t *dev,
         enum s7comm_function_t function, size_t payload_size, size_t data_size)
 {
     assert(dev);
