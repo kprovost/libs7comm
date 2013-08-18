@@ -238,6 +238,7 @@ void s7comm_disconnect(struct s7comm_dev_t *dev)
 
 static err_t s7comm_do_read_request(
         struct s7comm_dev_t *dev,
+        enum s7comm_area_t area,
         int db,
         uint32_t start_addr,
         enum s7comm_read_size_t size)
@@ -256,7 +257,7 @@ static err_t s7comm_do_read_request(
     req->read_size = size;
     req->read_length = htons(1); // Number of words to read
     req->db_num = htons(db);
-    req->area_code = s7comm_area_DB;
+    req->area_code = area;
     req->start_addr = (start_addr & 0x00ff0000) >> 24;
     req->start_addr_2 = htons(start_addr & 0xffff);
 
@@ -358,7 +359,7 @@ err_t s7comm_read_db_bit(struct s7comm_dev_t *dev, int db, int number, bool *val
     assert(value);
 
     uint32_t start_addr = number;
-    err_t err = s7comm_do_read_request(dev, db, start_addr, s7comm_read_size_bit);
+    err_t err = s7comm_do_read_request(dev, s7comm_area_DB, db, start_addr, s7comm_read_size_bit);
     if (! OK(err))
         return err;
 
@@ -386,7 +387,7 @@ err_t s7comm_read_db_byte(struct s7comm_dev_t *dev, int db, int number, uint8_t 
     assert(value);
 
     uint32_t start_addr = number * 8;
-    err_t err = s7comm_do_read_request(dev, db, start_addr, s7comm_read_size_byte);
+    err_t err = s7comm_do_read_request(dev, s7comm_area_DB, db, start_addr, s7comm_read_size_byte);
     if (! OK(err))
         return err;
 
@@ -414,7 +415,7 @@ err_t s7comm_read_db_word(struct s7comm_dev_t *dev, int db, int number, uint16_t
     assert(value);
 
     uint32_t start_addr = number * 8;
-    err_t err = s7comm_do_read_request(dev, db, start_addr, s7comm_read_size_word);
+    err_t err = s7comm_do_read_request(dev, s7comm_area_DB, db, start_addr, s7comm_read_size_word);
     if (! OK(err))
         return err;
 
@@ -471,4 +472,31 @@ err_t s7comm_write_db_word(struct s7comm_dev_t *dev, int db, int number, uint16_
 
     uint32_t start_addr = number * 8;
     return s7comm_do_write_request(dev, db, start_addr, s7comm_read_size_word, p);
+}
+
+err_t s7comm_read_output(struct s7comm_dev_t *dev, int card, int port, bool *value)
+{
+    assert(dev);
+    assert(value);
+
+    err_t err = s7comm_do_read_request(dev, s7comm_area_Outputs, card, port, s7comm_read_size_bit);
+    if (! OK(err))
+        return err;
+
+    if (! dev->last_response)
+        return ERR_READ_FAILURE;
+
+    struct ppkt_t *r = s7comm_process_receive(dev->last_response, &err);
+    if (! r || ! OK(err))
+    {
+        dev->last_response = NULL;
+        return err;
+    }
+
+    assert(ppkt_size(r) == 1);
+    *value = *PPKT_GET(uint8_t, r);
+
+    ppkt_free(r);
+    dev->last_response = NULL;
+    return ERR_NONE;
 }
