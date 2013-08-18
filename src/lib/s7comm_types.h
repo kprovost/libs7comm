@@ -87,7 +87,8 @@ struct s7comm_read_request_t
 
 enum s7comm_read_response_err_t
 {
-    s7comm_READ_RESPONSE_ERR_NONE = 0xff
+    s7comm_READ_RESPONSE_ERR_NONE = 0xff,
+    s7comm_READ_RESPONSE_ERR_NO_ITEM = 0x0a,
 };
 
 struct s7comm_read_response_t

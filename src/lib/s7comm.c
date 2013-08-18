@@ -38,12 +38,13 @@ struct ppkt_t* s7comm_create_request_hdr(struct s7comm_dev_t *dev,
     return ppkt_prefix_header(p, r);
 }
 
-static struct ppkt_t* s7comm_process_read(struct ppkt_t *p)
+static struct ppkt_t* s7comm_process_read(struct ppkt_t *p, err_t *err)
 {
     assert(p);
 
     if (ppkt_size(p) < sizeof(struct s7comm_read_response_t))
     {
+        *err = ERR_READ_FAILURE;
         ppkt_free(p);
         return NULL;
     }
@@ -55,21 +56,27 @@ static struct ppkt_t* s7comm_process_read(struct ppkt_t *p)
 
     if (resp->err != s7comm_READ_RESPONSE_ERR_NONE)
     {
+        if (resp->err == s7comm_READ_RESPONSE_ERR_NO_ITEM)
+            *err = ERR_NO_SUCH_VALUE;
+        else
+            *err = ERR_READ_FAILURE;
         ppkt_free(p);
         return NULL;
     }
     ppkt_pull(p, sizeof(struct s7comm_read_response_t));
     assert(length == ppkt_size(p));
 
+    *err = ERR_NONE;
     return p;
 }
 
-static struct ppkt_t* s7comm_process_write(struct ppkt_t *p)
+static struct ppkt_t* s7comm_process_write(struct ppkt_t *p, err_t *err)
 {
     assert(p);
 
     if (ppkt_size(p) < sizeof(struct s7comm_write_response_t))
     {
+        *err = ERR_WRITE_FAILURE;
         ppkt_free(p);
         return NULL;
     }
@@ -77,10 +84,15 @@ static struct ppkt_t* s7comm_process_write(struct ppkt_t *p)
     struct s7comm_write_response_t *resp = PPKT_GET(struct s7comm_write_response_t, p);
     if (resp->err != s7comm_READ_RESPONSE_ERR_NONE)
     {
+        if (resp->err == s7comm_READ_RESPONSE_ERR_NO_ITEM)
+            *err = ERR_NO_SUCH_VALUE;
+        else
+            *err = ERR_READ_FAILURE;
         ppkt_free(p);
         return NULL;
     }
 
+    *err = ERR_NONE;
     return p;
 }
 
@@ -97,15 +109,18 @@ static err_t s7comm_receive(struct ppkt_t *p, void *user)
     return ERR_NONE;
 }
 
-static struct ppkt_t* s7comm_process_receive(struct ppkt_t *p)
+static struct ppkt_t* s7comm_process_receive(struct ppkt_t *p, err_t *err)
 {
     struct s7comm_hdr_t *hdr = PPKT_GET(struct s7comm_hdr_t, p);
     uint16_t plen = ntohs(hdr->plen);
     uint16_t dlen = ntohs(hdr->dlen);
 
     if (plen < 2)
+    {
+        *err = ERR_READ_FAILURE;
         // Short packet?
         goto done;
+    }
 
     ppkt_pull(p, sizeof(struct s7comm_hdr_t));
 
@@ -117,18 +132,22 @@ static struct ppkt_t* s7comm_process_receive(struct ppkt_t *p)
     ppkt_pull(p, sizeof(struct s7comm_request_t));
 
     if (ppkt_size(p) < (plen - 2 + dlen))
+    {
+        *err = ERR_READ_FAILURE;
         // Invalid packet?
         goto done;
+    }
 
     switch (req->function)
     {
         case s7comm_function_open_connection:
             // Yay, but we don't care about the content
+            *err = ERR_NONE;
             break;
         case s7comm_function_read:
-            return s7comm_process_read(p);
+            return s7comm_process_read(p, err);
         case s7comm_function_write:
-            return s7comm_process_write(p);
+            return s7comm_process_write(p, err);
     }
 
 done:
@@ -165,11 +184,11 @@ static err_t s7comm_open_connection(struct s7comm_dev_t *dev)
         return ERR_CONNECTION_CLOSED;
 
     // TODO: Don't just assume that connecting succeeded
-    struct ppkt_t *r = s7comm_process_receive(dev->last_response);
+    struct ppkt_t *r = s7comm_process_receive(dev->last_response, &err);
     assert(! r);
     dev->last_response = NULL;
 
-    return ERR_NONE;
+    return err;
 }
 
 struct s7comm_dev_t* s7comm_connect(const char *addr)
@@ -314,14 +333,14 @@ static err_t s7comm_do_write_request(
     if (! dev->last_response)
         return ERR_WRITE_FAILURE;
 
-    struct ppkt_t *r = s7comm_process_receive(dev->last_response);
+    struct ppkt_t *r = s7comm_process_receive(dev->last_response, &err);
     dev->last_response = NULL;
 
     if (! r)
         return ERR_WRITE_FAILURE;
 
     ppkt_free(r);
-    return ERR_NONE;
+    return err;
 }
 
 err_t s7comm_read_bit(struct s7comm_dev_t *dev, int db, int number, bool *value)
@@ -337,11 +356,11 @@ err_t s7comm_read_bit(struct s7comm_dev_t *dev, int db, int number, bool *value)
     if (! dev->last_response)
         return ERR_READ_FAILURE;
 
-    struct ppkt_t *r = s7comm_process_receive(dev->last_response);
-    if (! r)
+    struct ppkt_t *r = s7comm_process_receive(dev->last_response, &err);
+    if (! r || ! OK(err))
     {
         dev->last_response = NULL;
-        return ERR_READ_FAILURE;
+        return err;
     }
 
     assert(ppkt_size(r) == 1);
@@ -365,11 +384,11 @@ err_t s7comm_read_byte(struct s7comm_dev_t *dev, int db, int number, uint8_t *va
     if (! dev->last_response)
         return ERR_READ_FAILURE;
 
-    struct ppkt_t *r = s7comm_process_receive(dev->last_response);
-    if (! r)
+    struct ppkt_t *r = s7comm_process_receive(dev->last_response, &err);
+    if (! r || ! OK(err))
     {
         dev->last_response = NULL;
-        return ERR_READ_FAILURE;
+        return err;
     }
 
     assert(ppkt_size(r) == 1);
@@ -393,8 +412,8 @@ err_t s7comm_read_word(struct s7comm_dev_t *dev, int db, int number, uint16_t *v
     if (! dev->last_response)
         return ERR_READ_FAILURE;
 
-    struct ppkt_t *r = s7comm_process_receive(dev->last_response);
-    if (! r)
+    struct ppkt_t *r = s7comm_process_receive(dev->last_response, &err);
+    if (! r || ! OK(err))
     {
         dev->last_response = NULL;
         return ERR_READ_FAILURE;
