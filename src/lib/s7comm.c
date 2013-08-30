@@ -500,3 +500,31 @@ err_t s7comm_read_output(struct s7comm_dev_t *dev, int card, int port, bool *val
     dev->last_response = NULL;
     return ERR_NONE;
 }
+
+err_t s7comm_read_flag_bit(struct s7comm_dev_t *dev, int db, int number, bool *value)
+{
+    assert(dev);
+    assert(value);
+
+    uint32_t start_addr = number;
+    err_t err = s7comm_do_read_request(dev, s7comm_area_Flags, db, start_addr, s7comm_read_size_bit);
+    if (! OK(err))
+        return err;
+
+    if (! dev->last_response)
+        return ERR_READ_FAILURE;
+
+    struct ppkt_t *r = s7comm_process_receive(dev->last_response, &err);
+    if (! r || ! OK(err))
+    {
+        dev->last_response = NULL;
+        return err;
+    }
+
+    assert(ppkt_size(r) == 1);
+    *value = *PPKT_GET(uint8_t, r);
+
+    ppkt_free(r);
+    dev->last_response = NULL;
+    return ERR_NONE;
+}

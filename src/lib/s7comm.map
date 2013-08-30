@@ -8,7 +8,12 @@ S7COMM_0.1 {
         s7comm_write_db_bit;
         s7comm_write_db_byte;
         s7comm_write_db_word;
+
         s7comm_read_output;
+
+        s7comm_read_flag_bit;
+        s7comm_read_flag_byte;
+        s7comm_read_flag_word;
 
         err_to_string;
     local:
