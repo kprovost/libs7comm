@@ -5,8 +5,6 @@
 #include <stdlib.h>
 #include <arpa/inet.h>
 
-#define TPKT_PORT 102
-
 struct tpkt_dev_t
 {
     ppkt_receive_function_t receive;
@@ -76,7 +74,7 @@ struct tpkt_dev_t* tpkt_connect(const char *addr, ppkt_receive_function_t receiv
     dev->user = user;
     dev->pktqueue = NULL;
 
-    dev->tcp = tcp_connect(addr, TPKT_PORT, tpkt_receive, dev);
+    dev->tcp = tcp_connect(addr, tpkt_receive, dev);
 
     if (! dev->tcp)
     {

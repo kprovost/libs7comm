@@ -13,6 +13,8 @@
 #include <string.h>
 #include <assert.h>
 
+#define TPKT_PORT 102
+
 struct tcp_dev_t
 {
     int fd;
@@ -20,7 +22,7 @@ struct tcp_dev_t
     void *user;
 };
 
-struct tcp_dev_t* tcp_connect(const char *addr, uint16_t port, ppkt_receive_function_t receive, void *user)
+struct tcp_dev_t* tcp_connect(const char *addr, ppkt_receive_function_t receive, void *user)
 {
     assert(addr);
     assert(receive);
@@ -47,7 +49,7 @@ struct tcp_dev_t* tcp_connect(const char *addr, uint16_t port, ppkt_receive_func
 
     struct sockaddr_in in;
     in.sin_family = AF_INET;
-    in.sin_port = htons(port);
+    in.sin_port = htons(TPKT_PORT);
     memcpy(&in.sin_addr, hostent->h_addr_list[0], sizeof(struct in_addr));
 
     int ret = connect(dev->fd, (struct sockaddr*)&in,
