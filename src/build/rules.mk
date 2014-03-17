@@ -28,7 +28,7 @@ endif
 		-o $(@) \
 		$^
 
-s7get/s7get test/tests:
+s7get/s7get test/tests analysis/analyze:
 	@echo [LD] $(@F)
 	$(Q)$(CXX) \
 		-o $(@) \
@@ -46,4 +46,5 @@ clean:
 	rm -Rf lib/*.o lib/*.o.d lib/*.so.*
 	rm -Rf s7get/*.o s7get/*.o.d s7get/s7get
 	rm -Rf test/*.o test/*.o.d test/tests
+	rm -Rf analysis/*.o analysis/*.o.d analysis/analyze
 	rm -f cpputest*.xml
