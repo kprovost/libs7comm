@@ -191,7 +191,6 @@ size_t ppkt_size(struct ppkt_t *p)
 
 size_t ppkt_chain_size(struct ppkt_t *p)
 {
-    assert(p);
     size_t length = 0;
 
     while (p)
