@@ -15,7 +15,8 @@ enum cotp_state_t
 struct cotp_dev_t
 {
     ppkt_receive_function_t receive;
-    struct tpkt_dev_t *tpkt;
+    void *lower_dev;
+    struct proto_t *proto;
     void *user;
     enum cotp_state_t state;
 };
@@ -100,7 +101,7 @@ static err_t cotp_receive_data(struct cotp_dev_t *dev, struct ppkt_t *p)
     return dev->receive(p, dev->user);
 }
 
-static err_t cotp_receive(struct ppkt_t *p, void *user)
+err_t cotp_receive(struct ppkt_t *p, void *user)
 {
     assert(p);
     assert(user);
@@ -159,10 +160,14 @@ static void cotp_append_option(struct ppkt_t *p, enum cotp_param_t type, size_t 
     ppkt_append_footer(option, p);
 }
 
-struct cotp_dev_t* cotp_connect(const char *addr, ppkt_receive_function_t receive, void *user)
+void* cotp_connect(const char *addr, ppkt_receive_function_t receive,
+        void *user, struct proto_t *lower_layer)
 {
     assert(addr);
     assert(receive);
+
+    if (! lower_layer)
+        lower_layer = &tpkt_proto;
 
     struct cotp_dev_t *dev = malloc(sizeof(struct cotp_dev_t));
     if (! dev)
@@ -170,9 +175,10 @@ struct cotp_dev_t* cotp_connect(const char *addr, ppkt_receive_function_t receiv
 
     dev->receive = receive;
     dev->user = user;
-    dev->tpkt = tpkt_connect(addr, cotp_receive, dev);
+    dev->proto = lower_layer;
+    dev->lower_dev = dev->proto->proto_connect(addr, cotp_receive, dev, NULL);
     dev->state = COTP_STATE_CONNECTING;
-    if (! dev->tpkt)
+    if (! dev->lower_dev)
     {
         free(dev);
         return NULL;
@@ -193,7 +199,7 @@ struct cotp_dev_t* cotp_connect(const char *addr, ppkt_receive_function_t receiv
 
     conn->common.size = ppkt_chain_size(p) - 1;
 
-    err_t err = tpkt_send(dev->tpkt, p);
+    err_t err = dev->proto->proto_send(dev->lower_dev, p);
     if (! OK(err))
     {
         cotp_disconnect(dev);
@@ -202,7 +208,7 @@ struct cotp_dev_t* cotp_connect(const char *addr, ppkt_receive_function_t receiv
 
     while (dev->state != COTP_STATE_CONNECTED)
     {
-        err_t err = tpkt_poll(dev->tpkt);
+        err_t err = dev->proto->proto_poll(dev->lower_dev);
         if (! OK(err))
         {
             cotp_disconnect(dev);
@@ -213,21 +219,24 @@ struct cotp_dev_t* cotp_connect(const char *addr, ppkt_receive_function_t receiv
     return dev;
 }
 
-void cotp_disconnect(struct cotp_dev_t *dev)
+void cotp_disconnect(void *d)
 {
-    assert(dev);
+    assert(d);
+
+    struct cotp_dev_t *dev = (struct cotp_dev_t*)d;
 
     // TODO Send disconnect message? Wait for confirmation?
 
-    tpkt_disconnect(dev->tpkt);
+    dev->proto->proto_disconnect(dev->lower_dev);
 
     free(dev);
 }
 
-err_t cotp_send(struct cotp_dev_t *dev, struct ppkt_t *p)
+err_t cotp_send(void *d, struct ppkt_t *p)
 {
-    assert(dev);
-    assert(dev->tpkt);
+    assert(d);
+    struct cotp_dev_t *dev = (struct cotp_dev_t*)d;
+    assert(dev->lower_dev);
     assert(dev->state == COTP_STATE_CONNECTED);
     assert(p);
 
@@ -240,12 +249,22 @@ err_t cotp_send(struct cotp_dev_t *dev, struct ppkt_t *p)
 
     p = ppkt_prefix_header(hdr, p);
 
-    return tpkt_send(dev->tpkt, p);
+    return dev->proto->proto_send(dev->lower_dev, p);
 }
 
-err_t cotp_poll(struct cotp_dev_t *dev)
+err_t cotp_poll(void *d)
 {
-    assert(dev);
+    assert(d);
+    struct cotp_dev_t *dev = (struct cotp_dev_t*)d;
 
-    return tpkt_poll(dev->tpkt);
+    return dev->proto->proto_poll(dev->lower_dev);
 }
+
+struct proto_t cotp_proto = {
+    .name = "COTP",
+    .proto_connect = cotp_connect,
+    .proto_disconnect = cotp_disconnect,
+    .proto_send = cotp_send,
+    .proto_receive = cotp_receive,
+    .proto_poll = cotp_poll
+};

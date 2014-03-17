@@ -1,16 +1,16 @@
 #include "tpkt.h"
-#include "tcp.h"
 
 #include <assert.h>
 #include <stdlib.h>
 #include <arpa/inet.h>
+#include "tcp.h"
 
 struct tpkt_dev_t
 {
     ppkt_receive_function_t receive;
-    struct tcp_dev_t  *tcp;
+    void *lower_dev;
+    struct proto_t *proto;
     void *user;
-
     struct ppkt_t *pktqueue;
 };
 
@@ -21,7 +21,7 @@ struct tpkthdr_t
     uint16_t size;
 } __attribute__((packed));
 
-static err_t tpkt_receive(struct ppkt_t *p, void *user)
+err_t tpkt_receive(struct ppkt_t *p, void *user)
 {
     assert(p);
 
@@ -60,7 +60,8 @@ static err_t tpkt_receive(struct ppkt_t *p, void *user)
     return ERR_NONE;
 }
 
-struct tpkt_dev_t* tpkt_connect(const char *addr, ppkt_receive_function_t receive, void *user)
+void* tpkt_connect(const char *addr, ppkt_receive_function_t receive,
+        void *user, struct proto_t *lower_layer)
 {
     assert(addr);
     assert(receive);
@@ -69,14 +70,22 @@ struct tpkt_dev_t* tpkt_connect(const char *addr, ppkt_receive_function_t receiv
     if (! dev)
         return NULL;
 
-    dev->tcp = NULL;
+    if (! lower_layer)
+        lower_layer = &tcp_proto;
+
+    dev->proto = lower_layer;
+
+    dev->lower_dev = NULL;
     dev->receive = receive;
     dev->user = user;
     dev->pktqueue = NULL;
 
-    dev->tcp = tcp_connect(addr, tpkt_receive, dev);
+    if (! lower_layer)
+        return dev;
 
-    if (! dev->tcp)
+    dev->lower_dev = dev->proto->proto_connect(addr, tpkt_receive, dev, NULL);
+
+    if (! dev->lower_dev)
     {
         free(dev);
         dev = NULL;
@@ -85,21 +94,25 @@ struct tpkt_dev_t* tpkt_connect(const char *addr, ppkt_receive_function_t receiv
     return dev;
 }
 
-void tpkt_disconnect(struct tpkt_dev_t *dev)
+void tpkt_disconnect(void *d)
 {
-    assert(dev);
-    assert(dev->tcp);
+    assert(d);
 
-    tcp_disconnect(dev->tcp);
+    struct tpkt_dev_t *dev = (struct tpkt_dev_t*)d;
+
+    if (dev->lower_dev)
+        dev->proto->proto_disconnect(dev->lower_dev);
 
     ppkt_free(dev->pktqueue);
     free(dev);
 }
 
-err_t tpkt_send(struct tpkt_dev_t *dev, struct ppkt_t *p)
+err_t tpkt_send(void *d, struct ppkt_t *p)
 {
-    assert(dev);
+    assert(d);
     assert(p);
+
+    struct tpkt_dev_t *dev = (struct tpkt_dev_t*)d;
 
     struct ppkt_t *hdr = ppkt_alloc(sizeof(struct tpkthdr_t));
     struct tpkthdr_t *tpkthdr = PPKT_GET(struct tpkthdr_t, hdr);
@@ -110,12 +123,24 @@ err_t tpkt_send(struct tpkt_dev_t *dev, struct ppkt_t *p)
 
     p = ppkt_prefix_header(hdr, p);
 
-    assert(dev->tcp);
-    return tcp_send(dev->tcp, p);
+    assert(dev->lower_dev);
+    return dev->proto->proto_send(dev->lower_dev, p);
 }
 
-err_t tpkt_poll(struct tpkt_dev_t *dev)
+err_t tpkt_poll(void *d)
 {
-    assert(dev);
-    return tcp_poll(dev->tcp);
+    assert(d);
+
+    struct tpkt_dev_t *dev = (struct tpkt_dev_t*)d;
+
+    return dev->proto->proto_poll(dev->lower_dev);
 }
+
+struct proto_t tpkt_proto = {
+    .name = "TPKT",
+    .proto_connect = tpkt_connect,
+    .proto_disconnect = tpkt_disconnect,
+    .proto_receive = tpkt_receive,
+    .proto_send = tpkt_send,
+    .proto_poll = tpkt_poll
+};

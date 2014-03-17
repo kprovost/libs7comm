@@ -328,7 +328,7 @@ int main(int argc, char** argv)
         return 1;
     }
 
-    pdev = pcap_connect(argv[1], &analyze_pcap_receive, NULL);
+    pdev = pcap_connect(argv[1], &analyze_pcap_receive, NULL, NULL);
     if (! pdev)
     {
         printf("Unable to open %s\n", argv[1]);

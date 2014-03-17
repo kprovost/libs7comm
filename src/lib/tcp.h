@@ -1,13 +1,16 @@
 #ifndef _TCP_H_
 #define _TCP_H_
 
+#include "err.h"
 #include "ppkt.h"
+#include "proto.h"
 
-struct tcp_dev_t;
+struct proto_t tcp_proto;
 
-struct tcp_dev_t* tcp_connect(const char* addr, ppkt_receive_function_t receive, void *user);
-void tcp_disconnect(struct tcp_dev_t *dev);
-err_t tcp_send(struct tcp_dev_t *dev, struct ppkt_t *p);
-err_t tcp_poll(struct tcp_dev_t *dev);
+void* tcp_connect(const char* addr, ppkt_receive_function_t receive,
+        void *user, struct proto_t *lower_layer);
+void tcp_disconnect(void *dev);
+err_t tcp_send(void *dev, struct ppkt_t *p);
+err_t tcp_poll(void *dev);
 
 #endif

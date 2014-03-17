@@ -199,7 +199,7 @@ struct s7comm_dev_t* s7comm_connect(const char *addr)
 
     dev->seq = 0;
     dev->last_response = NULL;
-    dev->cotpdev = cotp_connect(addr, s7comm_receive, dev);
+    dev->cotpdev = cotp_connect(addr, s7comm_receive, dev, NULL);
     if (! dev->cotpdev)
     {
         free(dev);

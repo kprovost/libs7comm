@@ -22,10 +22,12 @@ struct tcp_dev_t
     void *user;
 };
 
-struct tcp_dev_t* tcp_connect(const char *addr, ppkt_receive_function_t receive, void *user)
+void* tcp_connect(const char *addr, ppkt_receive_function_t receive,
+        void *user, struct proto_t *lower_layer)
 {
     assert(addr);
     assert(receive);
+    assert(! lower_layer);
 
     struct tcp_dev_t *dev = NULL;
     struct hostent *hostent = NULL;
@@ -72,16 +74,18 @@ error:
     return NULL;
 }
 
-void tcp_disconnect(struct tcp_dev_t *dev)
+void tcp_disconnect(void *d)
 {
-    assert(dev);
+    assert(d);
+    struct tcp_dev_t *dev = (struct tcp_dev_t*)d;
     close(dev->fd);
     free(dev);
 }
 
-err_t tcp_send(struct tcp_dev_t *dev, struct ppkt_t *p)
+err_t tcp_send(void *d, struct ppkt_t *p)
 {
-    assert(dev);
+    assert(d);
+    struct tcp_dev_t *dev = (struct tcp_dev_t*)d;
     assert(dev->fd != -1);
     assert(p);
 
@@ -112,9 +116,10 @@ err_t tcp_send(struct tcp_dev_t *dev, struct ppkt_t *p)
     return ret == -1 ? ERR_SEND_FAILED : ERR_NONE;
 }
 
-err_t tcp_poll(struct tcp_dev_t *dev)
+err_t tcp_poll(void *d)
 {
-    assert(dev);
+    assert(d);
+    struct tcp_dev_t *dev = (struct tcp_dev_t*)d;
 
     struct pollfd pfd = {
         .fd = dev->fd,
@@ -144,3 +149,12 @@ err_t tcp_poll(struct tcp_dev_t *dev)
 
     return dev->receive(p, dev->user);
 }
+
+struct proto_t tcp_proto = {
+    .name = "TCP",
+    .proto_connect = tcp_connect,
+    .proto_disconnect = tcp_disconnect,
+    .proto_receive = NULL,
+    .proto_send = tcp_send,
+    .proto_poll = tcp_poll
+};

@@ -3,12 +3,14 @@
 
 #include "err.h"
 #include "ppkt.h"
+#include "proto.h"
 
-struct cotp_dev_t;
+struct proto_t cotp_proto;
 
-struct cotp_dev_t* cotp_connect(const char *addr, ppkt_receive_function_t receive, void *user);
-void cotp_disconnect(struct cotp_dev_t *dev);
-err_t cotp_send(struct cotp_dev_t *dev, struct ppkt_t *p);
-err_t cotp_poll(struct cotp_dev_t *dev);
+void* cotp_connect(const char *addr, ppkt_receive_function_t receive,
+        void *user, struct proto_t *lower_layer);
+void cotp_disconnect(void *dev);
+err_t cotp_send(void *dev, struct ppkt_t *p);
+err_t cotp_poll(void *dev);
 
 #endif
