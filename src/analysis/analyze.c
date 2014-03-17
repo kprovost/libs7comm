@@ -8,6 +8,7 @@
 #include <linux/tcp.h>
 
 #include "cotp.h"
+#include "tpkt.h"
 #include "pcap.h"
 #include <s7comm_types.h>
 #include <s7comm_debug.h>
@@ -256,6 +257,17 @@ static void dump_s7comm_read_request(struct ppkt_t *p, size_t plen, size_t dlen)
     printf("Start addr: 0x%06x\n", start_addr);
 }*/
 
+static err_t analyze_tpkt_receive(struct ppkt_t *p, void *user)
+{
+    assert(p);
+
+    printf("tpkt_receive %lu bytes\n", ppkt_chain_size(p));
+    ppkt_free(p);
+
+    return ERR_NONE;
+}
+
+#if 0
 static err_t analyze_pcap_receive(struct ppkt_t *p, void *user)
 {
     assert(p);
@@ -267,7 +279,6 @@ static err_t analyze_pcap_receive(struct ppkt_t *p, void *user)
     ppkt_free(p);
     return ERR_NONE;
 
-#if 0
     if (ppkt_size(p) < sizeof(struct s7comm_hdr_t))
         goto done;
 
@@ -315,33 +326,32 @@ done:
     ppkt_free(p);
 
     return ERR_NONE;
-#endif
 }
+#endif
 
 int main(int argc, char** argv)
 {
-    struct pcap_dev_t *pdev;
-
     if (argc < 2)
     {
         printf("Usage: %s <file.pcap>\n", argv[0]);
         return 1;
     }
 
-    pdev = pcap_connect(argv[1], &analyze_pcap_receive, NULL, NULL);
-    if (! pdev)
+    struct tpkt_dev_t *tdev = tpkt_connect(argv[1], analyze_tpkt_receive,
+            NULL, &pcap_proto);
+    if (! tdev)
     {
-        printf("Unable to open %s\n", argv[1]);
+        printf("Unable to set up tpkt layer\n");
         return 1;
     }
 
     err_t err = ERR_NONE;
     do
     {
-        err = pcap_poll(pdev);
+        err = tpkt_poll(tdev);
     } while (OK(err));
 
-    pcap_disconnect(pdev);
+    tpkt_disconnect(tdev);
 
     return 0;
 }
