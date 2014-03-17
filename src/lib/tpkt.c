@@ -32,30 +32,34 @@ static err_t tpkt_receive(struct ppkt_t *p, void *user)
 
     dev->pktqueue = ppkt_append_footer(p, dev->pktqueue);
 
-    if (ppkt_chain_size(dev->pktqueue) < sizeof(struct tpkthdr_t))
-        return ERR_NONE;
+    while (ppkt_chain_size(dev->pktqueue) >= sizeof(struct tpkthdr_t))
+    {
+        dev->pktqueue = ppkt_coalesce(dev->pktqueue, sizeof(struct tpkthdr_t));
 
-    dev->pktqueue = ppkt_coalesce(dev->pktqueue, sizeof(struct tpkthdr_t));
+        struct tpkthdr_t *tpkthdr = PPKT_GET(struct tpkthdr_t, dev->pktqueue);
 
-    struct tpkthdr_t *tpkthdr = PPKT_GET(struct tpkthdr_t, dev->pktqueue);
+        assert(tpkthdr->version == 3);
 
-    assert(tpkthdr->version == 3);
+        size_t tpkt_size = ntohs(tpkthdr->size);
+        if (ppkt_chain_size(dev->pktqueue) < tpkt_size)
+            // Need more data
+            return ERR_NONE;
 
-    size_t tpkt_size = ntohs(tpkthdr->size);
-    if (ppkt_chain_size(dev->pktqueue) < tpkt_size)
-        // Need more data
-        return ERR_NONE;
+        // Split the chain into before and after
+        struct ppkt_t *pkt = dev->pktqueue;
+        ppkt_split(pkt, &dev->pktqueue, tpkt_size);
 
-    // Split the chain into before and after
-    struct ppkt_t *pkt = dev->pktqueue;
-    ppkt_split(pkt, &dev->pktqueue, tpkt_size);
+        // Skip header in the arrived packet
+        ppkt_pull(pkt, sizeof(struct tpkthdr_t));
 
-    // Skip header in the arrived packet
-    ppkt_pull(pkt, sizeof(struct tpkthdr_t));
+        // Pass the result to our upper layer
+        assert(dev->receive);
+        err_t ret = dev->receive(pkt, dev->user);
+        if (ret != ERR_NONE)
+            return ret;
+    }
 
-    // Pass the result to our upper layer
-    assert(dev->receive);
-    return dev->receive(pkt, dev->user);
+    return ERR_NONE;
 }
 
 struct tpkt_dev_t* tpkt_connect(const char *addr, ppkt_receive_function_t receive, void *user)
