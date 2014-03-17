@@ -1,4 +1,5 @@
 CC = gcc
+CXX = g++
 LD = gcc
 OBJCOPY = objcopy
 SIZE = size
