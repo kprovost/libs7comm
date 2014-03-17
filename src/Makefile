@@ -18,7 +18,7 @@ s7get/s7get: $(S7GET_OBJS) lib/${LIB_NAME}
 
 test/tests: $(TEST_OBJS) $(LIB_OBJS)
 
-analysis/analyze: $(ANALYSIS_OBJS) lib/$(LIB_NAME)
+analysis/analyze: $(ANALYSIS_OBJS) $(LIB_OBJS)
 
 # Dependencies
 -include $(addsuffix .d, $(OBJS))

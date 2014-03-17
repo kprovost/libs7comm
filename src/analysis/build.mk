@@ -4,6 +4,6 @@ analysis_srcs := \
 	analyze.c
 
 includes := include lib
-ldflags := -lpcap -Llib lib/libs7comm.so.0.1
+ldflags := -lpcap
 
 include $(topdir)/build/bottom.mk
