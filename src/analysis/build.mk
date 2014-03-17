@@ -1,7 +1,8 @@
 include $(topdir)/build/head.mk
 
 analysis_srcs := \
-	analyze.c
+	analyze.c \
+	pcap.c
 
 includes := include lib
 ldflags := -lpcap

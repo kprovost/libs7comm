@@ -8,6 +8,7 @@
 #include <linux/tcp.h>
 
 #include "cotp.h"
+#include "pcap.h"
 #include <s7comm_types.h>
 #include <s7comm_debug.h>
 #include <ppkt.h>
@@ -184,7 +185,7 @@ void pcap_parse_tcp(u_char *user, const u_char *bytes, const int len)
     else
         printf("Unknown connection at dest port = %d, src_port = %d\n",
                 dst_port, src_port);
-}*/
+}
 
 static void dump_s7comm_function(const enum s7comm_function_t function)
 {
@@ -253,15 +254,20 @@ static void dump_s7comm_read_request(struct ppkt_t *p, size_t plen, size_t dlen)
     printf("Area: %s\n", s7comm_area_to_string(req->area_code));
     uint32_t start_addr = (req->start_addr << 24) | ntohs(req->start_addr_2);
     printf("Start addr: 0x%06x\n", start_addr);
-}
+}*/
 
-static err_t analyze_receive(struct ppkt_t *p, void *user)
+static err_t analyze_pcap_receive(struct ppkt_t *p, void *user)
 {
     assert(p);
     assert(! user);
     printf("Packet:\n");
-    //dump_bytes(ppkt_payload(p), ppkt_size(p));
+    dump_bytes(ppkt_payload(p), ppkt_size(p));
 
+    // We get TCP payload here
+    ppkt_free(p);
+    return ERR_NONE;
+
+#if 0
     if (ppkt_size(p) < sizeof(struct s7comm_hdr_t))
         goto done;
 
@@ -309,11 +315,12 @@ done:
     ppkt_free(p);
 
     return ERR_NONE;
+#endif
 }
 
 int main(int argc, char** argv)
 {
-    struct cotp_dev_t *pdev;
+    struct pcap_dev_t *pdev;
 
     if (argc < 2)
     {
@@ -321,7 +328,7 @@ int main(int argc, char** argv)
         return 1;
     }
 
-    pdev = cotp_connect(argv[1], &analyze_receive, NULL);
+    pdev = pcap_connect(argv[1], &analyze_pcap_receive, NULL);
     if (! pdev)
     {
         printf("Unable to open %s\n", argv[1]);
@@ -331,10 +338,10 @@ int main(int argc, char** argv)
     err_t err = ERR_NONE;
     do
     {
-        err = cotp_poll(pdev);
+        err = pcap_poll(pdev);
     } while (OK(err));
 
-    cotp_disconnect(pdev);
+    pcap_disconnect(pdev);
 
     return 0;
 }
