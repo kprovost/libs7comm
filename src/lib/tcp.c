@@ -23,11 +23,12 @@ struct tcp_dev_t
 };
 
 void* tcp_connect(const char *addr, ppkt_receive_function_t receive,
-        void *user, struct proto_t *lower_layer)
+        void *user, proto_stack_t *protos)
 {
     assert(addr);
     assert(receive);
-    assert(! lower_layer);
+    assert(protos);
+    assert(! *protos);
 
     struct tcp_dev_t *dev = NULL;
     struct hostent *hostent = NULL;

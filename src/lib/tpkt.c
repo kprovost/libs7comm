@@ -61,29 +61,26 @@ err_t tpkt_receive(struct ppkt_t *p, void *user)
 }
 
 void* tpkt_connect(const char *addr, ppkt_receive_function_t receive,
-        void *user, struct proto_t *lower_layer)
+        void *user, proto_stack_t *protos)
 {
     assert(addr);
     assert(receive);
+    assert(protos);
+    assert(*protos);
 
     struct tpkt_dev_t *dev = malloc(sizeof(struct tpkt_dev_t));
     if (! dev)
         return NULL;
 
-    if (! lower_layer)
-        lower_layer = &tcp_proto;
-
-    dev->proto = lower_layer;
+    dev->proto = *protos;
 
     dev->lower_dev = NULL;
     dev->receive = receive;
     dev->user = user;
     dev->pktqueue = NULL;
 
-    if (! lower_layer)
-        return dev;
-
-    dev->lower_dev = dev->proto->proto_connect(addr, tpkt_receive, dev, NULL);
+    dev->lower_dev = dev->proto->proto_connect(addr, tpkt_receive, dev,
+            protos + 1);
 
     if (! dev->lower_dev)
     {

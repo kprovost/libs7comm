@@ -161,13 +161,12 @@ static void cotp_append_option(struct ppkt_t *p, enum cotp_param_t type, size_t 
 }
 
 void* cotp_connect(const char *addr, ppkt_receive_function_t receive,
-        void *user, struct proto_t *lower_layer)
+        void *user, proto_stack_t *protos)
 {
     assert(addr);
     assert(receive);
-
-    if (! lower_layer)
-        lower_layer = &tpkt_proto;
+    assert(protos);
+    assert(*protos);
 
     struct cotp_dev_t *dev = malloc(sizeof(struct cotp_dev_t));
     if (! dev)
@@ -175,8 +174,8 @@ void* cotp_connect(const char *addr, ppkt_receive_function_t receive,
 
     dev->receive = receive;
     dev->user = user;
-    dev->proto = lower_layer;
-    dev->lower_dev = dev->proto->proto_connect(addr, cotp_receive, dev, NULL);
+    dev->proto = *protos;
+    dev->lower_dev = dev->proto->proto_connect(addr, cotp_receive, dev, protos + 1);
     dev->state = COTP_STATE_CONNECTING;
     if (! dev->lower_dev)
     {

@@ -337,8 +337,11 @@ int main(int argc, char** argv)
         return 1;
     }
 
-    struct tpkt_dev_t *tdev = tpkt_connect(argv[1], analyze_tpkt_receive,
-            NULL, &pcap_proto);
+
+    struct proto_t *protostack[] = { &tpkt_proto, &pcap_proto, NULL };
+
+    struct tpkt_dev_t *tdev = cotp_connect(argv[1], analyze_tpkt_receive,
+            NULL, protostack);
     if (! tdev)
     {
         printf("Unable to set up tpkt layer\n");
@@ -348,10 +351,10 @@ int main(int argc, char** argv)
     err_t err = ERR_NONE;
     do
     {
-        err = tpkt_poll(tdev);
+        err = cotp_poll(tdev);
     } while (OK(err));
 
-    tpkt_disconnect(tdev);
+    cotp_disconnect(tdev);
 
     return 0;
 }

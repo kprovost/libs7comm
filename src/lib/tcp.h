@@ -8,7 +8,7 @@
 struct proto_t tcp_proto;
 
 void* tcp_connect(const char* addr, ppkt_receive_function_t receive,
-        void *user, struct proto_t *lower_layer);
+        void *user, proto_stack_t *protos);
 void tcp_disconnect(void *dev);
 err_t tcp_send(void *dev, struct ppkt_t *p);
 err_t tcp_poll(void *dev);

@@ -18,11 +18,12 @@ struct pcap_dev_t
 };
 
 void* pcap_connect(const char *filename, ppkt_receive_function_t receive,
-        void *user, struct proto_t *lower_layer)
+        void *user, proto_stack_t *protos)
 {
     assert(filename);
     assert(receive);
-    assert(! lower_layer);
+    assert(protos);
+    assert(! *protos);
 
     char errbuf[PCAP_ERRBUF_SIZE];
 

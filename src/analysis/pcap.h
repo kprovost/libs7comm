@@ -7,7 +7,7 @@
 struct proto_t pcap_proto;
 
 void* pcap_connect(const char *filename, ppkt_receive_function_t receive,
-        void *user, struct proto_t *lower_layer);
+        void *user, proto_stack_t *protos);
 void pcap_disconnect(void *dev);
 
 err_t pcap_poll(void *dev);
