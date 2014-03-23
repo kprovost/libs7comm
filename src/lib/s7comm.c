@@ -257,8 +257,6 @@ static err_t s7comm_do_read_request(
     req->start_addr_2 = htons(start_addr & 0xffff);
 
     p = ppkt_prefix_header(hdr, p);
-    if (! p)
-        return ERR_NO_MEM;
 
     err_t err = cotp_send(dev->cotpdev, p);
     if (! OK(err))
@@ -317,8 +315,6 @@ static err_t s7comm_do_write_request(
     req->start_addr_2 = htons(start_addr & 0xffff);
 
     p = ppkt_prefix_header(hdr, p);
-    if (! p)
-        return ERR_NO_MEM;
 
     struct ppkt_t *rr = ppkt_alloc(sizeof(struct s7comm_read_response_t));
     struct s7comm_read_response_t *resp = PPKT_GET(struct s7comm_read_response_t, rr);

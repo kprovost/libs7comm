@@ -8,8 +8,6 @@ const char* err_to_string(const err_t err)
     {
         case ERR_NONE:
             return "No error";
-        case ERR_NO_MEM:
-            return "Out of memory";
         case ERR_SEND_FAILED:
             return "Send failed";
         case ERR_RECV_FAILED:
