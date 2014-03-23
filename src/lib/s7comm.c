@@ -2,6 +2,8 @@
 #include "s7comm_types.h"
 #include "ppkt.h"
 #include "cotp.h"
+#include "tpkt.h"
+#include "tcp.h"
 
 #include <assert.h>
 #include <stdlib.h>
@@ -199,7 +201,9 @@ struct s7comm_dev_t* s7comm_connect(const char *addr)
 
     dev->seq = 0;
     dev->last_response = NULL;
-    dev->cotpdev = cotp_open(addr, s7comm_receive, dev, NULL);
+
+    struct proto_t *protostack[] = { &tpkt_proto, &tcp_proto, NULL };
+    dev->cotpdev = cotp_open(addr, s7comm_receive, dev, protostack);
     if (! dev->cotpdev)
     {
         free(dev);
