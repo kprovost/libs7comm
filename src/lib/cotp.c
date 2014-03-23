@@ -189,6 +189,11 @@ err_t cotp_connect(void* d)
     assert(d);
     struct cotp_dev_t *dev = (struct cotp_dev_t*)d;
 
+    // Connect lower layer
+    err_t err = dev->proto->proto_connect(dev->lower_dev);
+    if (! OK(err))
+        return err;
+
     // Send out connect message
     struct ppkt_t *p = ppkt_alloc(sizeof(struct cotphdr_connect_t));
 
@@ -206,7 +211,7 @@ err_t cotp_connect(void* d)
 
     conn->common.size = ppkt_chain_size(p) - 1;
 
-    err_t err = dev->proto->proto_send(dev->lower_dev, p);
+    err = dev->proto->proto_send(dev->lower_dev, p);
     if (! OK(err))
     {
         cotp_disconnect(dev);
