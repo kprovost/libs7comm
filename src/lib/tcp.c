@@ -17,12 +17,13 @@
 
 struct tcp_dev_t
 {
+    char *addr;
     int fd;
     ppkt_receive_function_t receive;
     void *user;
 };
 
-void* tcp_connect(const char *addr, ppkt_receive_function_t receive,
+void* tcp_open(const char *addr, ppkt_receive_function_t receive,
         void *user, proto_stack_t *protos)
 {
     assert(addr);
@@ -31,14 +32,6 @@ void* tcp_connect(const char *addr, ppkt_receive_function_t receive,
     assert(! *protos);
 
     struct tcp_dev_t *dev = NULL;
-    struct hostent *hostent = NULL;
-
-    hostent = gethostbyname(addr);
-    if (! hostent)
-        return NULL;
-
-    if (! hostent->h_addr_list[0])
-        return NULL;
 
     dev = malloc(sizeof(struct tcp_dev_t));
     if (! dev)
@@ -47,8 +40,30 @@ void* tcp_connect(const char *addr, ppkt_receive_function_t receive,
     dev->fd = socket(AF_INET, SOCK_STREAM, 0);
     dev->user = user;
     dev->receive = receive;
+    dev->addr = NULL;
     if (dev->fd == -1)
-        goto error;
+    {
+        free(dev);
+        return NULL;
+    }
+    dev->addr = strdup(addr);
+
+    return dev;
+}
+
+err_t tcp_connect(void *d)
+{
+    assert(d);
+    struct tcp_dev_t *dev = (struct tcp_dev_t*)d;
+    assert(dev->addr);
+
+    struct hostent *hostent = NULL;
+    hostent = gethostbyname(dev->addr);
+    if (! hostent)
+        return ERR_CONNECTION_FAILED;
+
+    if (! hostent->h_addr_list[0])
+        return ERR_CONNECTION_FAILED;
 
     struct sockaddr_in in;
     in.sin_family = AF_INET;
@@ -58,21 +73,14 @@ void* tcp_connect(const char *addr, ppkt_receive_function_t receive,
     int ret = connect(dev->fd, (struct sockaddr*)&in,
             sizeof(struct sockaddr_in));
     if (ret == -1)
-        goto error;
+        return ERR_CONNECTION_FAILED;
 
     int flag = 1;
     ret = setsockopt(dev->fd, IPPROTO_TCP, TCP_NODELAY, &flag, sizeof(int));
     if (ret == -1)
-        goto error;
+        return ERR_CONNECTION_FAILED;
 
-    return dev;
-
-error:
-    if (dev && dev->fd != -1)
-        close(dev->fd);
-
-    free(dev);
-    return NULL;
+    return ERR_NONE;
 }
 
 void tcp_disconnect(void *d)
@@ -80,6 +88,13 @@ void tcp_disconnect(void *d)
     assert(d);
     struct tcp_dev_t *dev = (struct tcp_dev_t*)d;
     close(dev->fd);
+}
+
+void tcp_close(void *d)
+{
+    assert(d);
+    struct tcp_dev_t *dev = (struct tcp_dev_t*)d;
+    free(dev->addr);
     free(dev);
 }
 
@@ -153,8 +168,10 @@ err_t tcp_poll(void *d)
 
 struct proto_t tcp_proto = {
     .name = "TCP",
+    .proto_open = tcp_open,
     .proto_connect = tcp_connect,
     .proto_disconnect = tcp_disconnect,
+    .proto_close = tcp_close,
     .proto_receive = NULL,
     .proto_send = tcp_send,
     .proto_poll = tcp_poll

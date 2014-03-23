@@ -160,7 +160,7 @@ static void cotp_append_option(struct ppkt_t *p, enum cotp_param_t type, size_t 
     ppkt_append_footer(option, p);
 }
 
-void* cotp_connect(const char *addr, ppkt_receive_function_t receive,
+void* cotp_open(const char *addr, ppkt_receive_function_t receive,
         void *user, proto_stack_t *protos)
 {
     assert(addr);
@@ -175,16 +175,26 @@ void* cotp_connect(const char *addr, ppkt_receive_function_t receive,
     dev->receive = receive;
     dev->user = user;
     dev->proto = *protos;
-    dev->lower_dev = dev->proto->proto_connect(addr, cotp_receive, dev, protos + 1);
-    dev->state = COTP_STATE_CONNECTING;
+    dev->lower_dev = dev->proto->proto_open(addr, cotp_receive, dev, protos + 1);
+    dev->state = COTP_STATE_DISCONNECTED;
     if (! dev->lower_dev)
     {
         free(dev);
         return NULL;
     }
 
+    return dev;
+}
+
+err_t cotp_connect(void* d)
+{
+    assert(d);
+    struct cotp_dev_t *dev = (struct cotp_dev_t*)d;
+
     // Send out connect message
     struct ppkt_t *p = ppkt_alloc(sizeof(struct cotphdr_connect_t));
+
+    dev->state = COTP_STATE_CONNECTING;
 
     struct cotphdr_connect_t *conn = PPKT_GET(struct cotphdr_connect_t, p);
     conn->common.tpdu_code = COTP_TPDU_CONNECT_REQUEST;
@@ -202,7 +212,7 @@ void* cotp_connect(const char *addr, ppkt_receive_function_t receive,
     if (! OK(err))
     {
         cotp_disconnect(dev);
-        return NULL;
+        return err;
     }
 
     while (dev->state != COTP_STATE_CONNECTED)
@@ -211,11 +221,11 @@ void* cotp_connect(const char *addr, ppkt_receive_function_t receive,
         if (! OK(err))
         {
             cotp_disconnect(dev);
-            return NULL;
+            return err;
         }
     }
 
-    return dev;
+    return ERR_NONE;
 }
 
 void cotp_disconnect(void *d)
@@ -228,6 +238,17 @@ void cotp_disconnect(void *d)
 
     dev->proto->proto_disconnect(dev->lower_dev);
 
+    dev->state = COTP_STATE_DISCONNECTED;
+}
+
+void cotp_close(void *d)
+{
+    assert(d);
+    struct cotp_dev_t *dev = (struct cotp_dev_t*)d;
+
+    assert(dev->state == COTP_STATE_DISCONNECTED);
+
+    dev->proto->proto_close(dev->lower_dev);
     free(dev);
 }
 
@@ -261,8 +282,10 @@ err_t cotp_poll(void *d)
 
 struct proto_t cotp_proto = {
     .name = "COTP",
+    .proto_open = cotp_open,
     .proto_connect = cotp_connect,
     .proto_disconnect = cotp_disconnect,
+    .proto_close = cotp_close,
     .proto_send = cotp_send,
     .proto_receive = cotp_receive,
     .proto_poll = cotp_poll

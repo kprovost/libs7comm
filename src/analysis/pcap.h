@@ -6,10 +6,12 @@
 
 struct proto_t pcap_proto;
 
-void* pcap_connect(const char *filename, ppkt_receive_function_t receive,
+void* pcap__open(const char *filename, ppkt_receive_function_t receive,
         void *user, proto_stack_t *protos);
-void pcap_disconnect(void *dev);
+err_t pcap__connect(void *dev);
+void pcap__disconnect(void *dev);
+void pcap__close(void *dev);
 
-err_t pcap_poll(void *dev);
+err_t pcap__poll(void *dev);
 
 #endif

@@ -199,14 +199,22 @@ struct s7comm_dev_t* s7comm_connect(const char *addr)
 
     dev->seq = 0;
     dev->last_response = NULL;
-    dev->cotpdev = cotp_connect(addr, s7comm_receive, dev, NULL);
+    dev->cotpdev = cotp_open(addr, s7comm_receive, dev, NULL);
     if (! dev->cotpdev)
     {
         free(dev);
         return NULL;
     }
 
-    err_t err = s7comm_open_connection(dev);
+    err_t err = cotp_connect(dev->cotpdev);
+    if (! OK(err))
+    {
+        cotp_close(dev->cotpdev);
+        free(dev);
+        return NULL;
+    }
+
+    err = s7comm_open_connection(dev);
     if (! OK(err))
     {
         free(dev);
@@ -220,6 +228,7 @@ void s7comm_disconnect(struct s7comm_dev_t *dev)
 {
     if (! dev) return;
     cotp_disconnect(dev->cotpdev);
+    cotp_close(dev->cotpdev);
     free(dev);
 }
 

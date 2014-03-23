@@ -340,7 +340,7 @@ int main(int argc, char** argv)
 
     struct proto_t *protostack[] = { &tpkt_proto, &pcap_proto, NULL };
 
-    struct tpkt_dev_t *tdev = cotp_connect(argv[1], analyze_tpkt_receive,
+    struct tpkt_dev_t *tdev = cotp_open(argv[1], analyze_tpkt_receive,
             NULL, protostack);
     if (! tdev)
     {
@@ -354,7 +354,7 @@ int main(int argc, char** argv)
         err = cotp_poll(tdev);
     } while (OK(err));
 
-    cotp_disconnect(tdev);
+    cotp_close(tdev);
 
     return 0;
 }

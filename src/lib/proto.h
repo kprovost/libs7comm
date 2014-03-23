@@ -18,9 +18,11 @@ struct proto_t
 {
     char name[PROTO_NAME_MAX_LEN];
 
-    void* (*proto_connect)(const char *addr, ppkt_receive_function_t func,
+    void* (*proto_open)(const char *addr, ppkt_receive_function_t func,
             void *user, proto_stack_t *protos);
+    err_t (*proto_connect)(void *proto_dev);
     void (*proto_disconnect)(void* proto_dev);
+    void (*proto_close)(void* proto_dev);
 
     err_t (*proto_receive)(struct ppkt_t *p, void *user);
     err_t (*proto_send)(void *proto_dev, struct ppkt_t *p);

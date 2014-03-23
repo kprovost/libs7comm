@@ -7,9 +7,11 @@
 
 struct proto_t tcp_proto;
 
-void* tcp_connect(const char* addr, ppkt_receive_function_t receive,
+void* tcp_open(const char* addr, ppkt_receive_function_t receive,
         void *user, proto_stack_t *protos);
+err_t tcp_connect(void *dev);
 void tcp_disconnect(void *dev);
+void tcp_close(void *dev);
 err_t tcp_send(void *dev, struct ppkt_t *p);
 err_t tcp_poll(void *dev);
 

@@ -60,7 +60,7 @@ err_t tpkt_receive(struct ppkt_t *p, void *user)
     return ERR_NONE;
 }
 
-void* tpkt_connect(const char *addr, ppkt_receive_function_t receive,
+void* tpkt_open(const char *addr, ppkt_receive_function_t receive,
         void *user, proto_stack_t *protos)
 {
     assert(addr);
@@ -79,7 +79,7 @@ void* tpkt_connect(const char *addr, ppkt_receive_function_t receive,
     dev->user = user;
     dev->pktqueue = NULL;
 
-    dev->lower_dev = dev->proto->proto_connect(addr, tpkt_receive, dev,
+    dev->lower_dev = dev->proto->proto_open(addr, tpkt_receive, dev,
             protos + 1);
 
     if (! dev->lower_dev)
@@ -91,14 +91,29 @@ void* tpkt_connect(const char *addr, ppkt_receive_function_t receive,
     return dev;
 }
 
+err_t tpkt_connect(void *d)
+{
+    assert(d);
+    struct tpkt_dev_t *dev = (struct tpkt_dev_t*)d;
+
+    return dev->proto->proto_connect(dev->lower_dev);
+}
+
 void tpkt_disconnect(void *d)
 {
     assert(d);
-
     struct tpkt_dev_t *dev = (struct tpkt_dev_t*)d;
 
     if (dev->lower_dev)
         dev->proto->proto_disconnect(dev->lower_dev);
+}
+
+void tpkt_close(void *d)
+{
+    assert(d);
+    struct tpkt_dev_t *dev = (struct tpkt_dev_t*)d;
+
+    dev->proto->proto_close(dev->lower_dev);
 
     ppkt_free(dev->pktqueue);
     free(dev);
@@ -135,8 +150,10 @@ err_t tpkt_poll(void *d)
 
 struct proto_t tpkt_proto = {
     .name = "TPKT",
+    .proto_open = tpkt_open,
     .proto_connect = tpkt_connect,
     .proto_disconnect = tpkt_disconnect,
+    .proto_close = tpkt_close,
     .proto_receive = tpkt_receive,
     .proto_send = tpkt_send,
     .proto_poll = tpkt_poll

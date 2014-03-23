@@ -14,6 +14,8 @@ const char* err_to_string(const err_t err)
             return "Send failed";
         case ERR_RECV_FAILED:
             return "Receive failed";
+        case ERR_CONNECTION_FAILED:
+            return "Connection failed";
         case ERR_CONNECTION_CLOSED:
             return "Connection closed";
         case ERR_TIMEOUT:

@@ -17,7 +17,7 @@ struct pcap_dev_t
     void *user;
 };
 
-void* pcap_connect(const char *filename, ppkt_receive_function_t receive,
+void* pcap__open(const char *filename, ppkt_receive_function_t receive,
         void *user, proto_stack_t *protos)
 {
     assert(filename);
@@ -43,10 +43,20 @@ void* pcap_connect(const char *filename, ppkt_receive_function_t receive,
     return dev;
 }
 
-void pcap_disconnect(void *d)
+err_t pcap__connect(void *d)
 {
     assert(d);
+    return ERR_NONE;
+}
 
+void pcap__disconnect(void *d)
+{
+    assert(d);
+}
+
+void pcap__close(void *d)
+{
+    assert(d);
     struct pcap_dev_t *dev = (struct pcap_dev_t*)d;
 
     pcap_close(dev->pcap);
@@ -152,7 +162,7 @@ static void pcap_receive(u_char *user, const struct pcap_pkthdr *h,
     pcap_receive_ipv4(dev, p);
 }
 
-err_t pcap_poll(void *d)
+err_t pcap__poll(void *d)
 {
     assert(d);
     struct pcap_dev_t *dev = (struct pcap_dev_t*)d;
@@ -167,9 +177,11 @@ err_t pcap_poll(void *d)
 
 struct proto_t pcap_proto = {
     .name = "PCAP",
-    .proto_connect = pcap_connect,
-    .proto_disconnect = pcap_disconnect,
+    .proto_open = pcap__open,
+    .proto_connect = pcap__connect,
+    .proto_disconnect = pcap__disconnect,
+    .proto_close = pcap__close,
     .proto_receive = NULL,
     .proto_send = NULL,
-    .proto_poll = pcap_poll
+    .proto_poll = pcap__poll
 };
