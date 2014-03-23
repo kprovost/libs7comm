@@ -169,8 +169,6 @@ void* cotp_open(const char *addr, ppkt_receive_function_t receive,
     assert(*protos);
 
     struct cotp_dev_t *dev = malloc(sizeof(struct cotp_dev_t));
-    if (! dev)
-        return NULL;
 
     dev->receive = receive;
     dev->user = user;

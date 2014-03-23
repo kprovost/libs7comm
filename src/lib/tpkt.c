@@ -69,8 +69,6 @@ void* tpkt_open(const char *addr, ppkt_receive_function_t receive,
     assert(*protos);
 
     struct tpkt_dev_t *dev = malloc(sizeof(struct tpkt_dev_t));
-    if (! dev)
-        return NULL;
 
     dev->proto = *protos;
 

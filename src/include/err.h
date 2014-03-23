@@ -4,7 +4,6 @@
 typedef enum
 {
     ERR_NONE,
-    ERR_NO_MEM,
     ERR_SEND_FAILED,
     ERR_RECV_FAILED,
     ERR_CONNECTION_FAILED,

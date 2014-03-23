@@ -28,8 +28,6 @@ void* pcap__open(const char *filename, ppkt_receive_function_t receive,
     char errbuf[PCAP_ERRBUF_SIZE];
 
     struct pcap_dev_t *dev = malloc(sizeof(struct pcap_dev_t));    
-    if (! dev)
-        return NULL;
 
     dev->receive = receive;
     dev->user = user;

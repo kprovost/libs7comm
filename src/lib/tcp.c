@@ -34,8 +34,6 @@ void* tcp_open(const char *addr, ppkt_receive_function_t receive,
     struct tcp_dev_t *dev = NULL;
 
     dev = malloc(sizeof(struct tcp_dev_t));
-    if (! dev)
-        return NULL;
 
     dev->fd = socket(AF_INET, SOCK_STREAM, 0);
     dev->user = user;
@@ -110,8 +108,6 @@ err_t tcp_send(void *d, struct ppkt_t *p)
     size_t pkts = ppkt_chain_count(p);
     assert(pkts >= 1);
     struct iovec *iov = malloc(sizeof(struct iovec) * pkts);
-    if (! iov)
-        return ERR_NO_MEM;
 
     struct ppkt_t *it = p;
     for (size_t i = 0; i < pkts; i++)
