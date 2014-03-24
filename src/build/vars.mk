@@ -13,6 +13,7 @@ LIB_OBJS = $(call src-to-obj,$(LIB_SRCS))
 S7GET_OBJS = $(call src-to-obj,$(S7GET_SRCS))
 TEST_OBJS = $(call src-to-obj,$(TEST_SRCS))
 ANALYSIS_OBJS = $(call src-to-obj,$(ANALYSIS_SRCS))
+OBJS = $(LIB_OBJS) $(S7GET_OBJS) $(TEST_OBJS) $(ANALYSIS_OBJS)
 
 module = $(<D)
 module_includes = $(addprefix -I, $($(_module)_includes))
