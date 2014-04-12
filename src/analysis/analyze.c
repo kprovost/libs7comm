@@ -257,11 +257,11 @@ static void dump_s7comm_read_request(struct ppkt_t *p, size_t plen, size_t dlen)
     printf("Start addr: 0x%06x\n", start_addr);
 }*/
 
-static err_t analyze_tpkt_receive(struct ppkt_t *p, void *user)
+static err_t analyze_receive(struct ppkt_t *p, void *user)
 {
     assert(p);
 
-    printf("tpkt_receive %lu bytes\n", ppkt_chain_size(p));
+    printf("receive %lu bytes\n", ppkt_chain_size(p));
     ppkt_free(p);
 
     return ERR_NONE;
@@ -340,9 +340,9 @@ int main(int argc, char** argv)
 
     struct proto_t *protostack[] = { &tpkt_proto, &pcap_proto, NULL };
 
-    struct tpkt_dev_t *tdev = cotp_open(argv[1], analyze_tpkt_receive,
+    void *dev = cotp_open(argv[1], analyze_receive,
             NULL, protostack);
-    if (! tdev)
+    if (! dev)
     {
         printf("Unable to set up tpkt layer\n");
         return 1;
@@ -351,10 +351,10 @@ int main(int argc, char** argv)
     err_t err = ERR_NONE;
     do
     {
-        err = cotp_poll(tdev);
+        err = cotp_poll(dev);
     } while (OK(err));
 
-    cotp_close(tdev);
+    cotp_close(dev);
 
     return 0;
 }
