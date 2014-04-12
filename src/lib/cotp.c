@@ -19,6 +19,7 @@ struct cotp_dev_t
     struct proto_t *proto;
     void *user;
     enum cotp_state_t state;
+    struct ppkt_t *defrag_queue;
 };
 
 enum cotp_tpdu_code_t
@@ -93,12 +94,18 @@ static err_t cotp_receive_data(struct cotp_dev_t *dev, struct ppkt_t *p)
 
     assert(data->common.size == sizeof(struct cotphdr_data_t) - 1);
 
-    // We don't support cotp fragmentation (yet)
-    assert(data->number & COTP_NUMBER_FINAL_FRAME);
-
     ppkt_pull(p, sizeof(struct cotphdr_data_t));
+    dev->defrag_queue = ppkt_append_footer(p, dev->defrag_queue);
 
-    return dev->receive(p, dev->user);
+    if (data->number & COTP_NUMBER_FINAL_FRAME)
+    {
+        p = dev->defrag_queue;
+        dev->defrag_queue = NULL;
+
+        return dev->receive(p, dev->user);
+    }
+
+    return ERR_NONE;
 }
 
 err_t cotp_receive(struct ppkt_t *p, void *user)
@@ -175,6 +182,7 @@ void* cotp_open(const char *addr, ppkt_receive_function_t receive,
     dev->proto = *protos;
     dev->lower_dev = dev->proto->proto_open(addr, cotp_receive, dev, protos + 1);
     dev->state = COTP_STATE_DISCONNECTED;
+    dev->defrag_queue = NULL;
     if (! dev->lower_dev)
     {
         free(dev);
@@ -252,6 +260,7 @@ void cotp_close(void *d)
     assert(dev->state == COTP_STATE_DISCONNECTED);
 
     dev->proto->proto_close(dev->lower_dev);
+    ppkt_free(dev->defrag_queue);
     free(dev);
 }
 
