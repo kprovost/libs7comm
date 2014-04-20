@@ -501,13 +501,13 @@ err_t s7comm_read_output(struct s7comm_dev_t *dev, int card, int port, bool *val
     return ERR_NONE;
 }
 
-err_t s7comm_read_flag_bit(struct s7comm_dev_t *dev, int db, int number, bool *value)
+err_t s7comm_read_flag_bit(struct s7comm_dev_t *dev, int number, bool *value)
 {
     assert(dev);
     assert(value);
 
     uint32_t start_addr = number;
-    err_t err = s7comm_do_read_request(dev, s7comm_area_Flags, db, start_addr, s7comm_read_size_bit);
+    err_t err = s7comm_do_read_request(dev, s7comm_area_Flags, 0, start_addr, s7comm_read_size_bit);
     if (! OK(err))
         return err;
 
