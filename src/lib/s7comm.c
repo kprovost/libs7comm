@@ -294,6 +294,7 @@ static int s7comm_bit_size(enum s7comm_read_size_t size)
 
 static err_t s7comm_do_write_request(
         struct s7comm_dev_t *dev,
+        enum s7comm_area_t area,
         int db,
         uint32_t start_addr,
         enum s7comm_read_size_t size,
@@ -315,7 +316,7 @@ static err_t s7comm_do_write_request(
     req->read_size = size;
     req->read_length = htons(1); // Number of words to read
     req->db_num = htons(db);
-    req->area_code = s7comm_area_DB;
+    req->area_code = area;
     req->start_addr = (start_addr & 0x00ff0000) >> 24;
     req->start_addr_2 = htons(start_addr & 0xffff);
 
@@ -447,7 +448,7 @@ err_t s7comm_write_db_bit(struct s7comm_dev_t *dev, int db, int number, uint8_t 
     *write_val = !! value;
 
     uint32_t start_addr = number;
-    return s7comm_do_write_request(dev, db, start_addr, s7comm_read_size_bit, p);
+    return s7comm_do_write_request(dev, s7comm_area_DB, db, start_addr, s7comm_read_size_bit, p);
 }
 
 err_t s7comm_write_db_byte(struct s7comm_dev_t *dev, int db, int number, uint8_t value)
@@ -459,7 +460,7 @@ err_t s7comm_write_db_byte(struct s7comm_dev_t *dev, int db, int number, uint8_t
     *write_val = value;
 
     uint32_t start_addr = number * 8;
-    return s7comm_do_write_request(dev, db, start_addr, s7comm_read_size_byte, p);
+    return s7comm_do_write_request(dev, s7comm_area_DB, db, start_addr, s7comm_read_size_byte, p);
 }
 
 err_t s7comm_write_db_word(struct s7comm_dev_t *dev, int db, int number, uint16_t value)
@@ -471,7 +472,7 @@ err_t s7comm_write_db_word(struct s7comm_dev_t *dev, int db, int number, uint16_
     *write_val = htons(value);
 
     uint32_t start_addr = number * 8;
-    return s7comm_do_write_request(dev, db, start_addr, s7comm_read_size_word, p);
+    return s7comm_do_write_request(dev, s7comm_area_DB, db, start_addr, s7comm_read_size_word, p);
 }
 
 err_t s7comm_read_output(struct s7comm_dev_t *dev, int card, int port, bool *value)
@@ -527,4 +528,17 @@ err_t s7comm_read_flag_bit(struct s7comm_dev_t *dev, int number, bool *value)
     ppkt_free(r);
     dev->last_response = NULL;
     return ERR_NONE;
+}
+
+err_t s7comm_write_flag_bit(struct s7comm_dev_t *dev, int number, bool value)
+{
+    assert(dev);
+
+    struct ppkt_t *p = ppkt_alloc(1);
+    uint8_t *write_val = PPKT_GET(uint8_t, p);
+    *write_val = !! value;
+
+    uint32_t start_addr = number;
+    return s7comm_do_write_request(dev, s7comm_area_Flags, 0, start_addr, s7comm_read_size_bit, p);
+
 }

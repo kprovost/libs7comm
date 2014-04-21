@@ -22,4 +22,6 @@ err_t s7comm_read_output(struct s7comm_dev_t *dev, int card, int port, bool *val
 
 err_t s7comm_read_flag_bit(struct s7comm_dev_t *dev, int number, bool *value);
 
+err_t s7comm_write_flag_bit(struct s7comm_dev_t *dev, int number, bool value);
+
 #endif
