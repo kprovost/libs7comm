@@ -11,6 +11,6 @@ lib_srcs := \
 
 #includes := include
 cflags := -fPIC
-ldflags := -Wl,--version-script,lib/s7comm.map -Wl,-soname=libs7comm.so.0
+ldflags := -Wl,--version-script,lib/s7comm.map -Wl,-soname=${LIB_SONAME}
 
 include $(topdir)/build/bottom.mk

@@ -1,7 +1,11 @@
-LIB_VERSION := 0.1
-LIB_NAME := libs7comm.so.${LIB_VERSION}
+LIB_RELEASE := 1
+LIB_API_VERSION := 0.0
+LIB_VERSION := ${LIB_API_VERSION}.${LIB_RELEASE}
+LIB_NAME := libs7comm.so
+LIB_SONAME := ${LIB_NAME}.${LIB_API_VERSION}
+LIB := ${LIB_SONAME}.${LIB_RELEASE}
 
-all: lib/${LIB_NAME} s7get/s7get test/tests analysis/analyze
+all: lib/${LIB} s7get/s7get test/tests analysis/analyze
 
 include build/debug.mk
 include build/rules.mk
@@ -12,9 +16,9 @@ include s7get/build.mk
 include analysis/build.mk
 include test/build.mk
 
-lib/${LIB_NAME}: $(LIB_OBJS)
+lib/${LIB}: $(LIB_OBJS)
 
-s7get/s7get: $(S7GET_OBJS) lib/${LIB_NAME}
+s7get/s7get: $(S7GET_OBJS) lib/${LIB_SONAME}
 
 test/tests: $(TEST_OBJS) $(LIB_OBJS)
 

@@ -4,5 +4,5 @@ s7get_srcs := \
 	s7get.c
 
 includes := include
-ldflags := lib/${LIB_NAME}
+ldflags := lib/${LIB}
 include $(topdir)/build/bottom.mk

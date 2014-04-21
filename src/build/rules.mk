@@ -28,6 +28,10 @@ endif
 		-o $(@) \
 		$^
 
+%.so.${LIB_API_VERSION}: %.so.${LIB_VERSION}
+	@echo [LN] $(@F)
+	${Q}ln -s $(<F) $@
+
 s7get/s7get test/tests analysis/analyze:
 	@echo [LD] $(@F)
 	$(Q)$(CXX) \
