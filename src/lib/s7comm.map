@@ -12,9 +12,6 @@ S7COMM_0.1 {
         s7comm_read_output;
 
         s7comm_read_flag_bit;
-        s7comm_read_flag_byte;
-        s7comm_read_flag_word;
-
         s7comm_write_flag_bit;
 
         err_to_string;
