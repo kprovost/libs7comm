@@ -1,7 +1,8 @@
-S7COMM_0.1 {
+S7COMM_0.0 {
     global:
         s7comm_connect;
         s7comm_disconnect;
+
         s7comm_read_db_bit;
         s7comm_read_db_byte;
         s7comm_read_db_word;
