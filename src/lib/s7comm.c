@@ -480,7 +480,7 @@ err_t s7comm_read_output(struct s7comm_dev_t *dev, int card, int port, bool *val
     assert(dev);
     assert(value);
 
-    err_t err = s7comm_do_read_request(dev, s7comm_area_Outputs, card, port, s7comm_read_size_bit);
+    err_t err = s7comm_do_read_request(dev, s7comm_area_Outputs, 0, (card * 8) + port, s7comm_read_size_bit);
     if (! OK(err))
         return err;
 
