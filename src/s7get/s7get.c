@@ -9,9 +9,10 @@
 
 static void help(const char *name)
 {
-    printf("Usage: %s -a <ip> -t [md] -d <db> -n <number>\n", name);
+    printf("Usage: %s -a <ip> -t [mda] -d <db> -n <number>\n", name);
     printf("       m: Merker (bit)\n");
     printf("       d: Data word\n");
+    printf("       a: Output\n");
     exit(EXIT_FAILURE);
 }
 
@@ -48,7 +49,7 @@ int main(int argc, char **argv)
     if (! ip || db == -1 || num == -1)
         help(argv[0]);
 
-    if (type != 'm' && type != 'd')
+    if (type != 'm' && type != 'd' && type != 'a')
     {
         printf("Invalid type %c\n", type);
         help(argv[0]);
@@ -70,7 +71,7 @@ int main(int argc, char **argv)
             printf("Failed to read\n");
             goto exit;
         }
-        printf("Value: 0x%01x\n", value);
+        printf("Value: %s\n", value ? "on" : "off");
     } else if (type == 'd')
     {
         uint16_t value = 0;
@@ -82,6 +83,16 @@ int main(int argc, char **argv)
         }
 
         printf("Value: 0x%04x\n", value);
+    } else if (type == 'a')
+    {
+        bool value = 0;
+        err_t err = s7comm_read_output(dev, db, num, &value);
+        if (! OK(err))
+        {
+            printf("Failed to read\n");
+            goto exit;
+        }
+        printf("Value: %s\n", value ? "on" : "off");
     }
     else
         assert(false);
