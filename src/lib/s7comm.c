@@ -540,5 +540,4 @@ err_t s7comm_write_flag_bit(struct s7comm_dev_t *dev, int number, bool value)
 
     uint32_t start_addr = number;
     return s7comm_do_write_request(dev, s7comm_area_Flags, 0, start_addr, s7comm_read_size_bit, p);
-
 }
