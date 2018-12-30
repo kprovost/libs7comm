@@ -62,7 +62,9 @@ int main(int argc, char **argv)
         return 1;
     }
 
-    if (type == 'm')
+    switch(type)
+    {
+    case 'm':
     {
         bool value = 0;
         err_t err = s7comm_read_flag_bit(dev, num, &value);
@@ -72,7 +74,9 @@ int main(int argc, char **argv)
             goto exit;
         }
         printf("Value: %s\n", value ? "on" : "off");
-    } else if (type == 'd')
+        break;
+    }
+    case 'd':
     {
         uint16_t value = 0;
         err_t err = s7comm_read_db_word(dev, db, num, &value);
@@ -83,7 +87,9 @@ int main(int argc, char **argv)
         }
 
         printf("Value: 0x%04x\n", value);
-    } else if (type == 'a')
+        break;
+    }
+    case 'a':
     {
         bool value = 0;
         err_t err = s7comm_read_output(dev, db, num, &value);
@@ -93,9 +99,11 @@ int main(int argc, char **argv)
             goto exit;
         }
         printf("Value: %s\n", value ? "on" : "off");
+        break;
     }
-    else
+    default:
         assert(false);
+    }
 
 exit:
     s7comm_disconnect(dev);
