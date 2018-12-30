@@ -21,3 +21,12 @@ Build requirements
  * libpcap-dev
  * libcpputest-dev
  * gcc, g++, make
+
+References
+----------
+
+ * http://snap7.sourceforge.net
+ * https://plc4x.incubator.apache.org/protocols/s7/s7comm.html
+ * http://gmiru.com/article/s7comm/
+ * https://www.promotic.eu/en/pmdoc/Subsystems/Comm/PLC/LOGO.htm
+ * Wireshark epan/dissectors/packet-s7comm.c
