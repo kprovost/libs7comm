@@ -49,7 +49,7 @@ int main(int argc, char **argv)
     if (! ip || db == -1 || num == -1)
         help(argv[0]);
 
-    if (type != 'm' && type != 'd' && type != 'a')
+    if (type != 'm' && type != 'd' && type != 'a' && type != 'i')
     {
         printf("Invalid type %c\n", type);
         help(argv[0]);
@@ -93,6 +93,18 @@ int main(int argc, char **argv)
     {
         bool value = 0;
         err_t err = s7comm_read_output(dev, db, num, &value);
+        if (! OK(err))
+        {
+            printf("Failed to read\n");
+            goto exit;
+        }
+        printf("Value: %s\n", value ? "on" : "off");
+        break;
+    }
+    case 'i':
+    {
+        bool value = 0;
+        err_t err = s7comm_read_input(dev, db, num, &value);
         if (! OK(err))
         {
             printf("Failed to read\n");
