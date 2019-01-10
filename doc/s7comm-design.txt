@@ -1,4 +1,4 @@
-As the Profinet standard is not freely available this is by neccessity a
+As the S7 standard is not freely available this is by neccessity a
 reverse engineering project, which means that much of the following is
 guesswork.
 
