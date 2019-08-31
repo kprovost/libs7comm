@@ -10,6 +10,7 @@ S7COMM_0.0 {
         s7comm_write_db_byte;
         s7comm_write_db_word;
 
+        s7comm_read_input;
         s7comm_read_output;
 
         s7comm_read_flag_bit;
