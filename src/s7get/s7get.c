@@ -13,6 +13,7 @@ static void help(const char *name)
     printf("       m: Merker (bit)\n");
     printf("       d: Data word\n");
     printf("       a: Output\n");
+    printf("       i: Input\n");
     exit(EXIT_FAILURE);
 }
 
