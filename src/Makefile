@@ -5,7 +5,11 @@ LIB_NAME := libs7comm.so
 LIB_SONAME := ${LIB_NAME}.${LIB_API_VERSION}
 LIB := ${LIB_SONAME}.${LIB_RELEASE}
 
-all: lib/${LIB} s7get/s7get test/tests analysis/analyze
+all: core test/tests analysis/analyze
+
+.PHONY: all core
+
+core: lib/${LIB} s7get/s7get
 
 include build/debug.mk
 include build/rules.mk
