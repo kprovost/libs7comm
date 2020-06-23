@@ -17,7 +17,8 @@ struct s7comm_dev_t
 };
 
 static struct ppkt_t* s7comm_create_request_hdr(struct s7comm_dev_t *dev,
-        enum s7comm_function_t function, size_t payload_size, size_t data_size)
+        enum s7comm_function_t function, size_t payload_size, size_t data_size,
+        int unknown)
 {
     assert(dev);
 
@@ -35,7 +36,7 @@ static struct ppkt_t* s7comm_create_request_hdr(struct s7comm_dev_t *dev,
     struct s7comm_request_t *req = PPKT_GET(struct s7comm_request_t, r);
 
     req->function = function;
-    req->unknown = 1;
+    req->unknown = unknown; // XXX Needs to be 0 on Logo, but 1 on PLC...
 
     return ppkt_prefix_header(p, r);
 }
@@ -157,14 +158,15 @@ done:
     return NULL;
 }
 
-static err_t s7comm_open_connection(struct s7comm_dev_t *dev)
+static err_t s7comm_open_connection(struct s7comm_dev_t *dev,
+    enum s7comm_dev_type_t type)
 {
     assert(dev);
     assert(dev->cotpdev);
 
     struct ppkt_t *hdr = s7comm_create_request_hdr(dev,
             s7comm_function_open_connection,
-            sizeof(struct s7comm_open_connection_t), 0);
+            sizeof(struct s7comm_open_connection_t), 0, type);
 
     struct ppkt_t *p = ppkt_alloc(sizeof(struct s7comm_open_connection_t));
     struct s7comm_open_connection_t *conn = PPKT_GET(struct s7comm_open_connection_t, p);
@@ -193,7 +195,8 @@ static err_t s7comm_open_connection(struct s7comm_dev_t *dev)
     return err;
 }
 
-struct s7comm_dev_t* s7comm_connect(const char *addr)
+struct s7comm_dev_t* s7comm_connect(const char *addr,
+    enum s7comm_dev_type_t type)
 {
     assert(addr);
 
@@ -218,7 +221,7 @@ struct s7comm_dev_t* s7comm_connect(const char *addr)
         return NULL;
     }
 
-    err = s7comm_open_connection(dev);
+    err = s7comm_open_connection(dev, type);
     if (! OK(err))
     {
         free(dev);
@@ -247,7 +250,7 @@ static err_t s7comm_do_read_request(
 
     struct ppkt_t *hdr = s7comm_create_request_hdr(dev,
             s7comm_function_read,
-            sizeof(struct s7comm_read_request_t), 0);
+            sizeof(struct s7comm_read_request_t), 0, 1);
 
     struct ppkt_t *p = ppkt_alloc(sizeof(struct s7comm_read_request_t));
     struct s7comm_read_request_t *req = PPKT_GET(struct s7comm_read_request_t, p);
@@ -306,7 +309,7 @@ static err_t s7comm_do_write_request(
     struct ppkt_t *hdr = s7comm_create_request_hdr(dev,
             s7comm_function_write,
             sizeof(struct s7comm_read_request_t),
-            sizeof(struct s7comm_read_response_t) + ppkt_size(value));
+            sizeof(struct s7comm_read_response_t) + ppkt_size(value), 0);
 
     struct ppkt_t *p = ppkt_alloc(sizeof(struct s7comm_read_request_t));
     struct s7comm_read_request_t *req = PPKT_GET(struct s7comm_read_request_t, p);

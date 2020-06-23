@@ -5,9 +5,14 @@
 #include <stdbool.h>
 #include "err.h"
 
+enum s7comm_dev_type_t {
+    S7COMM_DEV_TYPE_LOGO = 0,
+    S7COMM_DEV_TYPE_PLC = 1
+};
+
 struct s7comm_dev_t;
 
-struct s7comm_dev_t* s7comm_connect(const char *addr);
+struct s7comm_dev_t* s7comm_connect(const char *addr, enum s7comm_dev_type_t type);
 void s7comm_disconnect(struct s7comm_dev_t *dev);
 
 err_t s7comm_read_db_bit(struct s7comm_dev_t *dev, int db, int number, bool *value);

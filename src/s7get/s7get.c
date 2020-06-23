@@ -9,7 +9,9 @@
 
 static void help(const char *name)
 {
-    printf("Usage: %s -a <ip> -t [mda] -d <db> -n <number>\n", name);
+    printf("Usage: %s [-l] -a <ip> -t [mda] -d <db> -n <number>\n", name);
+    printf(" -l: Target is a Logo device.\n");
+    printf(" -t:\n");
     printf("       m: Merker (bit)\n");
     printf("       d: Data word\n");
     printf("       a: Output\n");
@@ -23,12 +25,16 @@ int main(int argc, char **argv)
     int db = -1;
     int num = -1;
     char type = 'd';
+    enum s7comm_dev_type_t devtype = S7COMM_DEV_TYPE_PLC;
 
     int opt;
-    while ((opt = getopt(argc, argv, "t:a:d:n:h")) != -1)
+    while ((opt = getopt(argc, argv, "t:a:d:n:hl")) != -1)
     {
         switch (opt)
         {
+            case 'l':
+                devtype = S7COMM_DEV_TYPE_LOGO;
+                break;
             case 'a':
                 ip = optarg;
                 break;
@@ -56,7 +62,7 @@ int main(int argc, char **argv)
         help(argv[0]);
     }
 
-    struct s7comm_dev_t *dev = s7comm_connect(ip);
+    struct s7comm_dev_t *dev = s7comm_connect(ip, devtype);
     if (! dev)
     {
         printf("Failed to connect: %s (%d)\n", strerror(errno), errno);
