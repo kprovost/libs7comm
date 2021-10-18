@@ -5,7 +5,7 @@
 #include "ppkt.h"
 #include "proto.h"
 
-struct proto_t tpkt_proto;
+extern struct proto_t tpkt_proto;
 
 void* tpkt_open(const char *addr, ppkt_receive_function_t func,
         void *user, proto_stack_t *protos);

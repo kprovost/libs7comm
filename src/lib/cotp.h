@@ -5,7 +5,7 @@
 #include "ppkt.h"
 #include "proto.h"
 
-struct proto_t cotp_proto;
+extern struct proto_t cotp_proto;
 
 void* cotp_open(const char *addr, ppkt_receive_function_t receive,
         void *user, proto_stack_t *protos);
