@@ -309,7 +309,7 @@ static err_t s7comm_do_write_request(
     struct ppkt_t *hdr = s7comm_create_request_hdr(dev,
             s7comm_function_write,
             sizeof(struct s7comm_read_request_t),
-            sizeof(struct s7comm_read_response_t) + ppkt_size(value), 0);
+            sizeof(struct s7comm_read_response_t) + ppkt_size(value), 1);
 
     struct ppkt_t *p = ppkt_alloc(sizeof(struct s7comm_read_request_t));
     struct s7comm_read_request_t *req = PPKT_GET(struct s7comm_read_request_t, p);
