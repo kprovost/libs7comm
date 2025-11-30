@@ -71,6 +71,7 @@ enum s7comm_read_size_t
     s7comm_read_size_bit = 1,
     s7comm_read_size_byte = 2,
     s7comm_read_size_word = 4,
+    s7comm_read_size_double_word = 6,
 };
 
 struct s7comm_read_request_t

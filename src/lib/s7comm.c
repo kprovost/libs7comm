@@ -290,6 +290,8 @@ static int s7comm_bit_size(enum s7comm_read_size_t size)
             return 8;
         case s7comm_read_size_word:
             return 16;
+        case s7comm_read_size_double_word:
+            return 32;
     }
     assert(false);
     return 0;
@@ -442,6 +444,35 @@ err_t s7comm_read_db_word(struct s7comm_dev_t *dev, int db, int number, uint16_t
     return err;
 }
 
+err_t s7comm_read_db_double_word(struct s7comm_dev_t *dev, int db, int number, uint32_t *value)
+{
+    assert(dev);
+    assert(value);
+
+    uint32_t start_addr = number * 8;
+    err_t err = s7comm_do_read_request(dev, s7comm_area_DB, db, start_addr, s7comm_read_size_double_word);
+    if (! OK(err))
+        return err;
+
+    if (! dev->last_response)
+        return ERR_READ_FAILURE;
+
+    struct ppkt_t *r = s7comm_process_receive(dev->last_response, &err);
+    if (! r || ! OK(err))
+    {
+        dev->last_response = NULL;
+        return ERR_READ_FAILURE;
+    }
+
+    assert(ppkt_size(r) == 4);
+    uint32_t *res = PPKT_GET(uint32_t, r);
+    *value = ntohs(*res);
+
+    ppkt_free(r);
+    dev->last_response = NULL;
+    return err;
+}
+
 err_t s7comm_write_db_bit(struct s7comm_dev_t *dev, int db, int number, uint8_t value)
 {
     assert(dev);
@@ -476,6 +507,17 @@ err_t s7comm_write_db_word(struct s7comm_dev_t *dev, int db, int number, uint16_
 
     uint32_t start_addr = number * 8;
     return s7comm_do_write_request(dev, s7comm_area_DB, db, start_addr, s7comm_read_size_word, p);
+}
+
+err_t s7comm_write_db_double_word(struct s7comm_dev_t *dev, int db, int number, uint32_t value)
+{
+    assert(dev);
+
+    struct ppkt_t *p = ppkt_alloc(4);
+    uint32_t *write_val = PPKT_GET(uint32_t, p);
+    *write_val = htonl(value);
+    uint32_t start_addr = number * 8;
+    return s7comm_do_write_request(dev, s7comm_area_DB, db, start_addr, s7comm_read_size_double_word, p);
 }
 
 err_t s7comm_read_input(struct s7comm_dev_t *dev, int card, int port, bool *value)
